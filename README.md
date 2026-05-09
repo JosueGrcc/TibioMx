@@ -58,7 +58,7 @@ SECRET_KEY=tu_secreto_super_seguro
 # Configura SMTP en app.py → _send_result_email() para emails reales
 ```
 
-## Flujo de una apuesta
+## Flujo de una apuesta 
 
 1. Un usuario crea una apuesta: *"¿El profe de BD llega tarde hoy?"*
 2. Otros usuarios ven la apuesta y eligen opción + cantidad
