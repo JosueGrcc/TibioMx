@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Ganar Puntos — TibioMx{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>Ganar puntos 💰</h2>
+  <p>Más formas de conseguir CuckostaPoints</p>
+</div>
+
+<!-- Bono diario -->
+<div class="card" style="display:flex; align-items:center; gap:16px;">
+  <div style="font-size:32px;">🌅</div>
+  <div style="flex:1;">
+    <p style="font-weight:600; margin-bottom:4px;">Bono diario</p>
+    <p style="font-size:13px; color:var(--c-muted);">
+      +100 CuckostaPoints cada vez que inicias sesión. Se acredita automáticamente al entrar.
+    </p>
+  </div>
+  <span class="badge accent">+100/día</span>
+</div>
+
+<!-- Ver anuncio -->
+<div class="ad-box">
+  <div class="ad-icon">📺</div>
+  <p>Ver un <strong>anuncio</strong> y ganar entre 10–50 CuckostaPoints</p>
+  <small>Disponible cada hora</small>
+  <br><br>
+  <form method="POST" action="{{ url_for('ver_anuncio') }}">
+    <button type="submit" class="btn primary" style="margin:0 auto; display:inline-flex;">
+      Ver anuncio ahora
+    </button>
+  </form>
+</div>
+
+<!-- Ganar apuestas -->
+<div class="card" style="display:flex; align-items:center; gap:16px;">
+  <div style="font-size:32px;">🎯</div>
+  <div>
+    <p style="font-weight:600; margin-bottom:4px;">Ganar apuestas</p>
+    <p style="font-size:13px; color:var(--c-muted);">
+      Cuando aciertas, ganas proporcional al pool total. Cuánto más apostaste, más ganas.
+    </p>
+    <p style="font-size:12px; color:var(--c-muted); margin-top:6px; font-family:'Space Mono',monospace;">
+      Pago = (tu apuesta / pool ganadores) × pool total
+    </p>
+  </div>
+</div>
+{% endblock %}

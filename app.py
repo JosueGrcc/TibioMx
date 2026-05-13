@@ -1,339 +1,319 @@
-from flask import Flask, request, jsonify, render_template_string, send_from_directory
-from flask_cors import CORS
+from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask_session import Session
 from db import (
     crear_usuario, obtener_usuario_por_correo, obtener_usuario_por_nombre, obtener_usuario_por_id,
     crear_apuesta, obtener_apuestas_activas, obtener_apuesta_por_id, realizar_jugada, resolver_apuesta,
     obtener_tabla_de_posiciones, crear_grupo, obtener_grupos_de_usuario, obtener_grupo_por_id,
-    agregar_miembro_a_grupo, obtener_apuestas_de_grupo, verificar_bono_diario, recompensa_por_anuncio,
-    obtener_jugadas_de_usuario, actualizar_puntos_usuario, borrar_apuesta
+    agregar_miembro_a_grupo, verificar_bono_diario, recompensa_por_anuncio,
+    obtener_jugadas_de_usuario, actualizar_puntos_usuario, obtener_grupo_por_codigo_invitacion
 )
-import jwt
+import bcrypt
 import datetime
 import os
-from functools import wraps
-import smtplib
-from email.mime.text import MIMEText
 
 app = Flask(__name__)
-CORS(app)
 app.config['SECRET_KEY'] = 'tibiomx_secret_2024'
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_FILE_DIR'] = '/tmp/flask_sessions'
+app.config['SESSION_PERMANENT'] = False
+Session(app)
 
-# ─── Middleware de Autenticación ───────────────────────────────────────────────
+os.makedirs('/tmp/flask_sessions', exist_ok=True)
 
-def requiere_token(f):
-    @wraps(f)
-    def decorador(*args, **kwargs):
-        token = request.headers.get('Authorization', '').replace('Bearer ', '')
-        if not token:
-            return jsonify({'error': 'Token requerido'}), 401
-        try:
-            datos = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
-            usuario_actual = obtener_usuario_por_id(datos['user_id'])
-            if not usuario_actual:
-                return jsonify({'error': 'Usuario no encontrado'}), 401
-        except jwt.ExpiredSignatureError:
-            return jsonify({'error': 'Token expirado'}), 401
-        except Exception:
-            return jsonify({'error': 'Token inválido'}), 401
-        return f(usuario_actual, *args, **kwargs)
-    return decorador
+# ─── Helpers ──────────────────────────────────────────────────────────────────
 
-# ─── Rutas de Autenticación ────────────────────────────────────────────────────
+def usuario_actual():
+    uid = session.get('user_id')
+    if not uid:
+        return None
+    return obtener_usuario_por_id(uid)
 
-@app.route('/api/register', methods=['POST'])
-def registrar():
-    datos = request.get_json()
-    nombre_usuario = datos.get('username', '').strip()
-    correo = datos.get('email', '').strip().lower()
-    contrasena = datos.get('password', '')
+def requiere_login():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    return None
 
-    if not all([nombre_usuario, correo, contrasena]):
-        return jsonify({'error': 'Todos los campos son requeridos'}), 400
-    if len(contrasena) < 6:
-        return jsonify({'error': 'La contraseña debe tener al menos 6 caracteres'}), 400
-    if obtener_usuario_por_correo(correo):
-        return jsonify({'error': 'El correo ya está registrado'}), 409
-    if obtener_usuario_por_nombre(nombre_usuario):
-        return jsonify({'error': 'El nombre de usuario ya existe'}), 409
+# ─── Auth ─────────────────────────────────────────────────────────────────────
 
-    usuario = crear_usuario(nombre_usuario, correo, contrasena)
-    token = jwt.encode({
-        'user_id': str(usuario['_id']),
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(days=7)
-    }, app.config['SECRET_KEY'])
+@app.route('/')
+def index():
+    if session.get('user_id'):
+        return redirect(url_for('inicio'))
+    return redirect(url_for('login'))
 
-    return jsonify({
-        'token': token,
-        'user': {
-            'id': str(usuario['_id']),
-            'username': usuario['username'],
-            'email': usuario['email'],
-            'points': usuario['points']
-        }
-    }), 201
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if session.get('user_id'):
+        return redirect(url_for('inicio'))
+    error = None
+    if request.method == 'POST':
+        correo = request.form.get('email', '').strip().lower()
+        contrasena = request.form.get('password', '')
+        usuario = obtener_usuario_por_correo(correo)
+        if not usuario or not bcrypt.checkpw(contrasena.encode(), usuario['password_hash']):
+            error = 'Credenciales incorrectas'
+        else:
+            session['user_id'] = str(usuario['_id'])
+            bono = verificar_bono_diario(str(usuario['_id']))
+            if bono and bono.get('bonus', 0) > 0:
+                flash(f"🌅 +{bono['bonus']} CuckostaPoints de bono diario!", 'win')
+            return redirect(url_for('inicio'))
+    return render_template('login.html', error=error)
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if session.get('user_id'):
+        return redirect(url_for('inicio'))
+    error = None
+    if request.method == 'POST':
+        nombre = request.form.get('username', '').strip()
+        correo = request.form.get('email', '').strip().lower()
+        contrasena = request.form.get('password', '')
+        if not all([nombre, correo, contrasena]):
+            error = 'Todos los campos son requeridos'
+        elif len(contrasena) < 6:
+            error = 'La contraseña debe tener al menos 6 caracteres'
+        elif obtener_usuario_por_correo(correo):
+            error = 'El correo ya está registrado'
+        elif obtener_usuario_por_nombre(nombre):
+            error = 'El nombre de usuario ya existe'
+        else:
+            usuario = crear_usuario(nombre, correo, contrasena)
+            session['user_id'] = str(usuario['_id'])
+            flash('¡Cuenta creada! Bienvenido con 1,000 CuckostaPoints 🎉', 'win')
+            return redirect(url_for('inicio'))
+    return render_template('register.html', error=error)
 
-@app.route('/api/login', methods=['POST'])
-def iniciar_sesion():
-    datos = request.get_json()
-    correo = datos.get('email', '').strip().lower()
-    contrasena = datos.get('password', '')
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
 
-    usuario = obtener_usuario_por_correo(correo)
-    if not usuario:
-        return jsonify({'error': 'Credenciales incorrectas'}), 401
+# ─── Inicio ───────────────────────────────────────────────────────────────────
 
-    import bcrypt
-    if not bcrypt.checkpw(contrasena.encode(), usuario['password_hash']):
-        return jsonify({'error': 'Credenciales incorrectas'}), 401
+@app.route('/inicio')
+def inicio():
+    redir = requiere_login()
+    if redir: return redir
+    u = usuario_actual()
+    apuestas = obtener_apuestas_activas()
+    en_vivo = [b for b in apuestas if b.get('live_participants')][:3]
+    return render_template('inicio.html', usuario=u, apuestas=apuestas, en_vivo=en_vivo, active='home')
 
-    # Bono diario
-    resultado_bono = verificar_bono_diario(str(usuario['_id']))
+# ─── Apuestas ─────────────────────────────────────────────────────────────────
 
-    token = jwt.encode({
-        'user_id': str(usuario['_id']),
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(days=7)
-    }, app.config['SECRET_KEY'])
-
-    return jsonify({
-        'token': token,
-        'user': {
-            'id': str(usuario['_id']),
-            'username': usuario['username'],
-            'email': usuario['email'],
-            'points': usuario['points'] + (resultado_bono.get('bonus', 0) if resultado_bono else 0)
-        },
-        'daily_bonus': resultado_bono
-    })
-
-
-@app.route('/api/me', methods=['GET'])
-@requiere_token
-def obtener_mi_perfil(usuario_actual):
-    return jsonify({
-        'id': str(usuario_actual['_id']),
-        'username': usuario_actual['username'],
-        'email': usuario_actual['email'],
-        'points': usuario_actual['points'],
-        'created_at': usuario_actual['created_at'].isoformat()
-    })
-
-# ─── Rutas de Apuestas ─────────────────────────────────────────────────────────
-
-@app.route('/api/bets', methods=['GET'])
-@requiere_token
-def listar_apuestas(usuario_actual):
+@app.route('/apuestas')
+def apuestas():
+    redir = requiere_login()
+    if redir: return redir
+    u = usuario_actual()
     id_grupo = request.args.get('group_id')
-    apuestas = obtener_apuestas_activas(id_grupo)
-    resultado = []
-    for apuesta in apuestas:
-        resultado.append({
-            'id': str(apuesta['_id']),
-            'title': apuesta['title'],
-            'description': apuesta.get('description', ''),
-            'creator': apuesta['creator_username'],
-            'options': apuesta['options'],
-            'ends_at': apuesta['ends_at'].isoformat(),
-            'created_at': apuesta['created_at'].isoformat(),
-            'status': apuesta['status'],
-            'total_pool': apuesta.get('total_pool', 0),
-            'wager_count': apuesta.get('wager_count', 0),
-            'group_id': str(apuesta['group_id']) if apuesta.get('group_id') else None,
-            'live_participants': apuesta.get('live_participants', [])
-        })
-    return jsonify(resultado)
+    lista = obtener_apuestas_activas(id_grupo)
+    grupos = obtener_grupos_de_usuario(str(u['_id']))
+    return render_template('apuestas.html', usuario=u, apuestas=lista, grupos=grupos, id_grupo_sel=id_grupo, active='bets')
 
+@app.route('/apuestas/crear', methods=['POST'])
+def crear_apuesta_ruta():
+    redir = requiere_login()
+    if redir: return redir
+    u = usuario_actual()
+    titulo = request.form.get('title', '').strip()
+    descripcion = request.form.get('description', '').strip()
+    opciones_raw = request.form.getlist('options')
+    opciones = [o.strip() for o in opciones_raw if o.strip()]
+    fecha_fin_str = request.form.get('ends_at', '')
+    id_grupo = request.form.get('group_id') or None
 
-@app.route('/api/bets', methods=['POST'])
-@requiere_token
-def crear_nueva_apuesta(usuario_actual):
-    datos = request.get_json()
-    titulo = datos.get('title', '').strip()
-    descripcion = datos.get('description', '').strip()
-    opciones = datos.get('options', [])
-    fecha_fin_str = datos.get('ends_at')
-    id_grupo = datos.get('group_id')
-
-    if not titulo or len(opciones) < 2:
-        return jsonify({'error': 'Título y al menos 2 opciones requeridos'}), 400
-
+    if not titulo or len(opciones) < 2 or not fecha_fin_str:
+        flash('Completa todos los campos y al menos 2 opciones', 'error')
+        return redirect(url_for('apuestas'))
     try:
         fecha_fin = datetime.datetime.fromisoformat(fecha_fin_str)
     except Exception:
-        return jsonify({'error': 'Fecha inválida'}), 400
-
+        flash('Fecha inválida', 'error')
+        return redirect(url_for('apuestas'))
     if fecha_fin <= datetime.datetime.utcnow():
-        return jsonify({'error': 'La fecha debe ser futura'}), 400
+        flash('La fecha debe ser futura', 'error')
+        return redirect(url_for('apuestas'))
 
-    apuesta = crear_apuesta(
-        id_creador=str(usuario_actual['_id']),
-        nombre_creador=usuario_actual['username'],
+    crear_apuesta(
+        id_creador=str(u['_id']),
+        nombre_creador=u['username'],
         titulo=titulo,
         descripcion=descripcion,
         opciones=opciones,
         fecha_fin=fecha_fin,
         id_grupo=id_grupo
     )
+    flash('¡Apuesta creada! 🎉', 'win')
+    return redirect(url_for('apuestas'))
 
-    return jsonify({'id': str(apuesta['_id']), 'message': '¡Apuesta creada!'}), 201
-
-
-
-@app.route('/api/bets/<id_apuesta>/wager', methods=['POST'])
-@requiere_token
-def realizar_nueva_jugada(usuario_actual, id_apuesta):
-    datos = request.get_json()
-    opcion = datos.get('option')
-    cantidad = int(datos.get('amount', 0))
+@app.route('/apuestas/<id_apuesta>/apostar', methods=['POST'])
+def apostar(id_apuesta):
+    redir = requiere_login()
+    if redir: return redir
+    u = usuario_actual()
+    opcion = request.form.get('option', '')
+    try:
+        cantidad = int(request.form.get('amount', 0))
+    except ValueError:
+        flash('Cantidad inválida', 'error')
+        return redirect(url_for('apuestas'))
 
     if cantidad <= 0:
-        return jsonify({'error': 'Cantidad inválida'}), 400
-    if usuario_actual['points'] < cantidad:
-        return jsonify({'error': 'Puntos insuficientes'}), 400
+        flash('Cantidad inválida', 'error')
+        return redirect(url_for('apuestas'))
+    if u['points'] < cantidad:
+        flash('Puntos insuficientes', 'error')
+        return redirect(url_for('apuestas'))
 
     apuesta = obtener_apuesta_por_id(id_apuesta)
-    if not apuesta:
-        return jsonify({'error': 'Apuesta no encontrada'}), 404
-    if apuesta['status'] != 'active':
-        return jsonify({'error': 'Apuesta cerrada'}), 400
+    if not apuesta or apuesta['status'] != 'active':
+        flash('Apuesta no disponible', 'error')
+        return redirect(url_for('apuestas'))
     if opcion not in apuesta['options']:
-        return jsonify({'error': 'Opción inválida'}), 400
+        flash('Opción inválida', 'error')
+        return redirect(url_for('apuestas'))
     if datetime.datetime.utcnow() > apuesta['ends_at']:
-        return jsonify({'error': 'La apuesta ya terminó'}), 400
+        flash('La apuesta ya terminó', 'error')
+        return redirect(url_for('apuestas'))
 
     resultado = realizar_jugada(
         id_apuesta=id_apuesta,
-        id_usuario=str(usuario_actual['_id']),
-        nombre_usuario=usuario_actual['username'],
+        id_usuario=str(u['_id']),
+        nombre_usuario=u['username'],
         opcion=opcion,
         cantidad=cantidad
     )
-
     if resultado.get('error'):
-        return jsonify(resultado), 400
+        flash(resultado['error'], 'error')
+    else:
+        actualizar_puntos_usuario(str(u['_id']), -cantidad)
+        flash(f'🎲 ¡Apostaste {cantidad} pts en "{opcion}"!', 'win')
 
-    actualizar_puntos_usuario(str(usuario_actual['_id']), -cantidad)
-    return jsonify({'message': f'¡Apostaste {cantidad} CuckostaPoints en "{opcion}"!', 'new_points': usuario_actual['points'] - cantidad})
+    return redirect(url_for('apuestas'))
 
-
-@app.route('/api/bets/<id_apuesta>/resolve', methods=['POST'])
-@requiere_token
-def resolver_apuesta_ruta(usuario_actual, id_apuesta):
-    datos = request.get_json()
-    opcion_ganadora = datos.get('winning_option')
-
+@app.route('/apuestas/<id_apuesta>/resolver', methods=['POST'])
+def resolver(id_apuesta):
+    redir = requiere_login()
+    if redir: return redir
+    u = usuario_actual()
     apuesta = obtener_apuesta_por_id(id_apuesta)
     if not apuesta:
-        return jsonify({'error': 'Apuesta no encontrada'}), 404
-    if apuesta['creator_id'] != str(usuario_actual['_id']):
-        return jsonify({'error': 'Solo el creador puede resolver'}), 403
-    if apuesta['status'] != 'active':
-        return jsonify({'error': 'Ya fue resuelta'}), 400
+        flash('Apuesta no encontrada', 'error')
+        return redirect(url_for('apuestas'))
+    if apuesta['creator_id'] != str(u['_id']):
+        flash('Solo el creador puede resolver', 'error')
+        return redirect(url_for('apuestas'))
+    opcion_ganadora = request.form.get('winning_option', '')
     if opcion_ganadora not in apuesta['options']:
-        return jsonify({'error': 'Opción inválida'}), 400
+        flash('Opción inválida', 'error')
+        return redirect(url_for('apuestas'))
 
     ganadores = resolver_apuesta(id_apuesta, opcion_ganadora)
-    # Enviar notificaciones por correo (mejor esfuerzo)
-    for g in ganadores:
-        try:
-            _enviar_correo_resultado(g['email'], g['username'], apuesta['title'], g['won'], g['payout'])
-        except Exception:
-            pass
+    n_ganadores = len([g for g in ganadores if g['won']])
+    flash(f'✅ Apuesta resuelta. {n_ganadores} ganadores.', 'win')
+    return redirect(url_for('apuestas'))
 
-    return jsonify({'message': f'Apuesta resuelta. Ganadores: {len(ganadores)}', 'winners': ganadores})
+# ─── Grupos ───────────────────────────────────────────────────────────────────
 
+@app.route('/grupos')
+def grupos():
+    redir = requiere_login()
+    if redir: return redir
+    u = usuario_actual()
+    lista = obtener_grupos_de_usuario(str(u['_id']))
+    return render_template('grupos.html', usuario=u, grupos=lista, active='groups')
 
-@app.route('/api/bets/my-wagers', methods=['GET'])
-@requiere_token
-def mis_jugadas(usuario_actual):
-    jugadas = obtener_jugadas_de_usuario(str(usuario_actual['_id']))
-    return jsonify(jugadas)
-
-# ─── Rutas de Grupos ──────────────────────────────────────────────────────────
-
-@app.route('/api/groups', methods=['GET'])
-@requiere_token
-def listar_grupos(usuario_actual):
-    grupos = obtener_grupos_de_usuario(str(usuario_actual['_id']))
-    return jsonify([{
-        'id': str(g['_id']),
-        'name': g['name'],
-        'description': g.get('description', ''),
-        'member_count': len(g.get('members', [])),
-        'invite_code': g['invite_code'],
-        'created_by': g['created_by_username']
-    } for g in grupos])
-
-
-@app.route('/api/groups', methods=['POST'])
-@requiere_token
-def crear_nuevo_grupo(usuario_actual):
-    datos = request.get_json()
-    nombre = datos.get('name', '').strip()
-    descripcion = datos.get('description', '').strip()
-
+@app.route('/grupos/crear', methods=['POST'])
+def crear_grupo_ruta():
+    redir = requiere_login()
+    if redir: return redir
+    u = usuario_actual()
+    nombre = request.form.get('name', '').strip()
+    descripcion = request.form.get('description', '').strip()
     if not nombre:
-        return jsonify({'error': 'Nombre requerido'}), 400
+        flash('Nombre requerido', 'error')
+        return redirect(url_for('grupos'))
+    grupo = crear_grupo(str(u['_id']), u['username'], nombre, descripcion)
+    flash(f'¡Grupo creado! Código de invitación: {grupo["invite_code"]} 🎉', 'win')
+    return redirect(url_for('grupos'))
 
-    grupo = crear_grupo(str(usuario_actual['_id']), usuario_actual['username'], nombre, descripcion)
-    return jsonify({
-        'id': str(grupo['_id']),
-        'invite_code': grupo['invite_code'],
-        'message': '¡Grupo creado!'
-    }), 201
-
-
-@app.route('/api/groups/join', methods=['POST'])
-@requiere_token
-def unirse_a_grupo(usuario_actual):
-    datos = request.get_json()
-    codigo_invitacion = datos.get('invite_code', '').strip().upper()
-
-    from db import obtener_grupo_por_codigo_invitacion
-    grupo = obtener_grupo_por_codigo_invitacion(codigo_invitacion)
+@app.route('/grupos/unirse', methods=['POST'])
+def unirse_grupo():
+    redir = requiere_login()
+    if redir: return redir
+    u = usuario_actual()
+    codigo = request.form.get('invite_code', '').strip().upper()
+    grupo = obtener_grupo_por_codigo_invitacion(codigo)
     if not grupo:
-        return jsonify({'error': 'Código inválido'}), 404
-
-    resultado = agregar_miembro_a_grupo(str(grupo['_id']), str(usuario_actual['_id']), usuario_actual['username'])
+        flash('Código inválido', 'error')
+        return redirect(url_for('grupos'))
+    resultado = agregar_miembro_a_grupo(str(grupo['_id']), str(u['_id']), u['username'])
     if resultado.get('error'):
-        return jsonify(resultado), 400
+        flash(resultado['error'], 'error')
+    else:
+        flash(f'¡Te uniste a {grupo["name"]}! 🎉', 'win')
+    return redirect(url_for('grupos'))
 
-    return jsonify({'message': f'¡Te uniste a {grupo["name"]}!', 'group_id': str(grupo['_id'])})
+# ─── Historial ────────────────────────────────────────────────────────────────
 
-# ─── Tabla de Posiciones y Recompensas ────────────────────────────────────────
+@app.route('/historial')
+def historial():
+    redir = requiere_login()
+    if redir: return redir
+    u = usuario_actual()
+    jugadas = obtener_jugadas_de_usuario(str(u['_id']))
+    return render_template('historial.html', usuario=u, jugadas=jugadas, active='history')
 
-@app.route('/api/leaderboard', methods=['GET'])
-@requiere_token
-def tabla_de_posiciones(usuario_actual):
+# ─── Tabla de posiciones ──────────────────────────────────────────────────────
+
+@app.route('/leaderboard')
+def leaderboard():
+    redir = requiere_login()
+    if redir: return redir
+    u = usuario_actual()
     top = obtener_tabla_de_posiciones(5)
-    return jsonify([{
-        'rank': i + 1,
-        'username': u['username'],
-        'points': u['points']
-    } for i, u in enumerate(top)])
+    return render_template('leaderboard.html', usuario=u, top=top, active='leaderboard')
 
+# ─── Recompensas ─────────────────────────────────────────────────────────────
 
-@app.route('/api/ad-reward', methods=['POST'])
-@requiere_token
-def ver_anuncio(usuario_actual):
-    resultado = recompensa_por_anuncio(str(usuario_actual['_id']))
+@app.route('/recompensas')
+def recompensas():
+    redir = requiere_login()
+    if redir: return redir
+    u = usuario_actual()
+    return render_template('recompensas.html', usuario=u, active='rewards')
+
+@app.route('/recompensas/anuncio', methods=['POST'])
+def ver_anuncio():
+    redir = requiere_login()
+    if redir: return redir
+    u = usuario_actual()
+    resultado = recompensa_por_anuncio(str(u['_id']))
     if resultado.get('error'):
-        return jsonify(resultado), 429
-    return jsonify({'message': f'¡Ganaste {resultado["reward"]} CuckostaPoints por ver el anuncio!', 'reward': resultado['reward'], 'new_points': resultado['new_points']})
+        flash(resultado['error'], 'error')
+    else:
+        flash(f'💰 ¡Ganaste {resultado["reward"]} CuckostaPoints por ver el anuncio!', 'win')
+    return redirect(url_for('recompensas'))
 
-# ─── Ayudante de Correo ───────────────────────────────────────────────────────
+# ─── Template filters ─────────────────────────────────────────────────────────
 
-def _enviar_correo_resultado(correo, nombre_usuario, titulo_apuesta, gano, pago):
-    # Configurar con SMTP real en producción
-    pass
+@app.template_filter('formato_puntos')
+def formato_puntos(n):
+    return f"{n:,} pts".replace(',', ',')
 
-# ─── Servir el Frontend ───────────────────────────────────────────────────────
-
-@app.route('/')
-def pagina_principal():
-    return send_from_directory('.', 'index.html')
+@app.template_filter('tiempo_restante')
+def tiempo_restante(fecha_fin):
+    ahora = datetime.datetime.utcnow()
+    diff = fecha_fin - ahora
+    if diff.total_seconds() <= 0:
+        return 'Terminó'
+    horas = diff.total_seconds() / 3600
+    if horas < 1:
+        return f"{int(diff.total_seconds() / 60)}min"
+    return f"{int(horas)}h"
 
 if __name__ == '__main__':
-    import os
     puerto = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=puerto, debug=False)

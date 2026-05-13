@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TibioMx — Entrar</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="auth-page">
+  <div class="auth-box">
+    <div class="auth-logo">TibioMx 🎲</div>
+    <p class="auth-sub">Apuestas cotidianas universitarias</p>
+
+    {% if error %}
+      <p class="flash-msg error" style="margin-bottom:16px;">{{ error }}</p>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('login') }}">
+      <div class="form-group">
+        <label>Correo institucional</label>
+        <input type="email" name="email" placeholder="tu@universidad.edu.mx" required autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn primary" style="width:100%; margin-top:8px; justify-content:center;">
+        Entrar
+      </button>
+    </form>
+
+    <p class="auth-switch">¿No tienes cuenta? <a href="{{ url_for('register') }}">Regístrate</a></p>
+  </div>
+</div>
+</body>
+</html>

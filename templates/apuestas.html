@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}Apuestas — TibioMx{% endblock %}
+{% block meta %}<meta http-equiv="refresh" content="30">{% endblock %}
+
+{% block content %}
+<div class="page-header-row">
+  <div class="page-header" style="margin-bottom:0;">
+    <h2>Apuestas 🎯</h2>
+    <p>Apuesta tus CuckostaPoints en lo que pase hoy</p>
+  </div>
+  <span class="refresh-notice">↻ 30s</span>
+</div>
+
+<!-- ── Crear nueva apuesta ── -->
+<div id="nueva" class="inline-form-wrap" style="margin-bottom:24px;">
+  <h4>+ Nueva apuesta</h4>
+  <form method="POST" action="{{ url_for('crear_apuesta_ruta') }}">
+    <div class="form-group">
+      <label>¿Qué va a pasar?</label>
+      <input type="text" name="title" placeholder="¿El profe llegará tarde hoy?" required>
+    </div>
+    <div class="form-group">
+      <label>Descripción (opcional)</label>
+      <textarea name="description" placeholder="Más detalles..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Opciones de respuesta (mínimo 2)</label>
+      <div class="option-rows">
+        <div class="option-row">
+          <input type="text" name="options" placeholder="Sí, llega tarde" required>
+        </div>
+        <div class="option-row">
+          <input type="text" name="options" placeholder="No, llega puntual" required>
+        </div>
+        <div class="option-row">
+          <input type="text" name="options" placeholder="Opción 3 (opcional)">
+        </div>
+        <div class="option-row">
+          <input type="text" name="options" placeholder="Opción 4 (opcional)">
+        </div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label>Termina el</label>
+        <input type="datetime-local" name="ends_at" required>
+      </div>
+      <div class="form-group">
+        <label>Grupo (opcional)</label>
+        <select name="group_id">
+          <option value="">Pública (todos ven)</option>
+          {% for g in grupos %}
+            <option value="{{ g._id }}">{{ g.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <button type="submit" class="btn primary">Crear apuesta 🎲</button>
+  </form>
+</div>
+
+<hr class="divider">
+
+<!-- ── Filtro por grupo ── -->
+<div style="margin-bottom:20px; display:flex; gap:8px; flex-wrap:wrap;">
+  <a class="btn {% if not id_grupo_sel %}primary{% endif %}" href="{{ url_for('apuestas') }}">Públicas</a>
+  {% for g in grupos %}
+    <a class="btn {% if id_grupo_sel == g._id|string %}primary{% endif %}" href="{{ url_for('apuestas') }}?group_id={{ g._id }}">{{ g.name }}</a>
+  {% endfor %}
+</div>
+
+<!-- ── Lista de apuestas ── -->
+{% if apuestas %}
+  {% for apuesta in apuestas %}
+    {% set es_creador = (apuesta.creator_id == usuario._id|string) %}
+    <div class="bet-card">
+      <div class="bet-title">{{ apuesta.title }}</div>
+      {% if apuesta.description %}
+        <div class="bet-desc">{{ apuesta.description }}</div>
+      {% endif %}
+      <div class="bet-meta">
+        <span class="badge">Por @{{ apuesta.creator_username }}</span>
+        <span class="badge gold">🏦 {{ apuesta.total_pool }} pts en juego</span>
+        <span class="badge accent">⏱ {{ apuesta.ends_at | tiempo_restante }}</span>
+        <span class="badge">{{ apuesta.wager_count }} apostando</span>
+      </div>
+      <div class="pool-bar">
+        <div class="pool-fill" style="width: {{ [apuesta.wager_count * 10, 100] | min }}%"></div>
+      </div>
+
+      <!-- Opciones -->
+      <div class="options-pills">
+        {% for opt in apuesta.options %}
+          <span class="option-pill">{{ opt }}</span>
+        {% endfor %}
+      </div>
+
+      <!-- Formulario de apuesta -->
+      <form method="POST" action="{{ url_for('apostar', id_apuesta=apuesta._id) }}">
+        <div class="wager-form">
+          <select name="option" required>
+            <option value="" disabled selected>Elige opción...</option>
+            {% for opt in apuesta.options %}
+              <option value="{{ opt }}">{{ opt }}</option>
+            {% endfor %}
+          </select>
+          <input type="number" name="amount" placeholder="Pts" min="1" max="{{ usuario.points }}" required>
+          <button type="submit" class="btn primary sm">Apostar 🎲</button>
+        </div>
+      </form>
+
+      <!-- Resolver (solo creador) -->
+      {% if es_creador %}
+        <form method="POST" action="{{ url_for('resolver', id_apuesta=apuesta._id) }}" style="margin-top:10px;">
+          <div class="resolve-form">
+            <select name="winning_option" required>
+              <option value="" disabled selected>¿Qué ganó?</option>
+              {% for opt in apuesta.options %}
+                <option value="{{ opt }}">{{ opt }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="btn sm">✅ Resolver</button>
+          </div>
+        </form>
+      {% endif %}
+
+      <!-- Feed en vivo -->
+      {% if apuesta.live_participants %}
+        <div class="live-feed">
+          <div class="live-feed-title">🔴 En vivo</div>
+          {% for p in apuesta.live_participants[-5:] | reverse %}
+            <div class="live-entry">
+              <span class="live-user">{{ p.username }}</span>
+              <span class="live-option">→ {{ p.option }}</span>
+              <span class="live-amount">{{ p.amount }} pts</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="empty">
+    <div class="empty-icon">🎯</div>
+    <p>No hay apuestas activas. ¡Crea la primera arriba!</p>
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}TibioMx 🎲{% endblock %}</title>
+  {% block meta %}{% endblock %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <div class="logo">
+      <h1>TibioMx 🎲</h1>
+      <span>cuckostapoints</span>
+    </div>
+    <nav>
+      <a class="nav-item {% if active == 'home' %}active{% endif %}" href="{{ url_for('inicio') }}">
+        <span class="nav-icon">🏠</span> Inicio
+      </a>
+      <a class="nav-item {% if active == 'bets' %}active{% endif %}" href="{{ url_for('apuestas') }}">
+        <span class="nav-icon">🎯</span> Apuestas
+      </a>
+      <a class="nav-item {% if active == 'groups' %}active{% endif %}" href="{{ url_for('grupos') }}">
+        <span class="nav-icon">👥</span> Grupos
+      </a>
+      <a class="nav-item {% if active == 'history' %}active{% endif %}" href="{{ url_for('historial') }}">
+        <span class="nav-icon">📋</span> Mi historial
+      </a>
+      <a class="nav-item {% if active == 'leaderboard' %}active{% endif %}" href="{{ url_for('leaderboard') }}">
+        <span class="nav-icon">🏆</span> Top 5
+      </a>
+      <a class="nav-item {% if active == 'rewards' %}active{% endif %}" href="{{ url_for('recompensas') }}">
+        <span class="nav-icon">💰</span> Ganar puntos
+      </a>
+    </nav>
+    <div class="sidebar-user">
+      <div class="avatar">{{ usuario.username[:2].upper() }}</div>
+      <div class="sidebar-user-info">
+        <p>@{{ usuario.username }}</p>
+        <span>{{ usuario.points | formato_puntos }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div id="main">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class="flash-list">
+          {% for category, message in messages %}
+            <li class="flash-msg {{ category }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </div>
+
+</div>
+</body>
+</html>

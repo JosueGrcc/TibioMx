@@ -4,30 +4,81 @@ import bcrypt
 import datetime
 import random
 import string
+import ssl
 from bson import ObjectId
 
 MONGO_URI = 'mongodb+srv://sixeven_db_user:andresjr1234@brazzino01.ba7bkul.mongodb.net/?appName=Brazzino01'
 
-# ─── Conexión Perezosa ─────────────────────────────────────────────────────────
-# No conectar al importar — solo cuando se haga la primera query real.
-# Esto evita el crash SSL en Python 3.14 durante el startup de Render.
-
 _cliente = None
 _base_datos = None
+
+def _crear_contexto_ssl():
+    """
+    Crea un contexto SSL que fuerza TLS 1.2.
+    Soluciona TLSV1_ALERT_INTERNAL_ERROR en Python 3.8-3.9 en Windows
+    donde la negocion TLS 1.3 falla con MongoDB Atlas.
+    """
+    ctx = ssl.create_default_context(cafile=certifi.where())
+    ctx.minimum_version = ssl.TLSVersion.TLSv1_2
+    ctx.maximum_version = ssl.TLSVersion.TLSv1_2
+    return ctx
 
 def obtener_base_datos():
     global _cliente, _base_datos
     if _base_datos is None:
-        ca = certifi.where()
-        _cliente = MongoClient(
-            MONGO_URI,
-            tlsCAFile=ca,
-            tls=True,
-            serverSelectionTimeoutMS=30000,
-            connectTimeoutMS=30000,
-            socketTimeoutMS=30000,
-        )
-        _base_datos = _cliente['tibiomx']
+        # Intentamos 3 estrategias en orden, de mas segura a menos
+        intentos = [
+            # 1) TLS 1.2 forzado con certifi (fix principal para Windows)
+            lambda: MongoClient(
+                MONGO_URI,
+                ssl_context=_crear_contexto_ssl(),
+                serverSelectionTimeoutMS=10000,
+                connectTimeoutMS=10000,
+                socketTimeoutMS=20000,
+            ),
+            # 2) TLS default sin forzar version
+            lambda: MongoClient(
+                MONGO_URI,
+                tlsCAFile=certifi.where(),
+                tls=True,
+                serverSelectionTimeoutMS=10000,
+                connectTimeoutMS=10000,
+                socketTimeoutMS=20000,
+            ),
+            # 3) Sin validacion de cert (solo desarrollo local)
+            lambda: MongoClient(
+                MONGO_URI,
+                tlsAllowInvalidCertificates=True,
+                serverSelectionTimeoutMS=10000,
+                connectTimeoutMS=10000,
+                socketTimeoutMS=20000,
+            ),
+        ]
+
+        ultimo_error = None
+        for construir_cliente in intentos:
+            try:
+                c = construir_cliente()
+                c['tibiomx'].command('ping')   # verifica conexion real
+                _cliente = c
+                _base_datos = _cliente['tibiomx']
+                break
+            except Exception as e:
+                ultimo_error = e
+                try:
+                    c.close()
+                except Exception:
+                    pass
+                continue
+
+        if _base_datos is None:
+            raise RuntimeError(
+                f'No se pudo conectar a MongoDB Atlas despues de 3 intentos.\n'
+                f'Ultimo error: {ultimo_error}\n'
+                f'Verifica: 1) Tu IP esta en Network Access en Atlas  '
+                f'2) El cluster esta activo  3) Las credenciales son correctas'
+            )
+
         try:
             _base_datos['users'].create_index('email', unique=True)
             _base_datos['users'].create_index('username', unique=True)
@@ -37,6 +88,7 @@ def obtener_base_datos():
             _base_datos['groups'].create_index('invite_code', unique=True)
         except Exception:
             pass
+
     return _base_datos
 
 def Usuarios(): return obtener_base_datos()['users']
@@ -130,7 +182,6 @@ def crear_apuesta(id_creador, nombre_creador, titulo, descripcion, opciones, fec
     resultado = Apuestas().insert_one(apuesta)
     apuesta['_id'] = resultado.inserted_id
     return apuesta
-
 
 def obtener_apuestas_activas(id_grupo=None):
     consulta = {'status': 'active', 'ends_at': {'$gt': datetime.datetime.utcnow()}}
@@ -266,3 +317,6 @@ def obtener_apuestas_de_grupo(id_grupo):
 
 def obtener_tabla_de_posiciones(limite=5):
     return list(Usuarios().find({}, {'username': 1, 'points': 1}).sort('points', DESCENDING).limit(limite))
+
+def borrar_apuesta(id_apuesta):
+    Apuestas().delete_one({'_id': ObjectId(id_apuesta)})

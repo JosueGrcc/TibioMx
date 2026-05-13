@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Top 5 — TibioMx{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>Top 5 🏆</h2>
+  <p>Los más ricos de la universidad</p>
+</div>
+
+{% set medallas = ['🥇','🥈','🥉','4️⃣','5️⃣'] %}
+
+{% if top %}
+  {% for u in top %}
+    {% set es_yo = (u.username == usuario.username) %}
+    <div class="lb-row {% if es_yo %}lb-you{% endif %}">
+      <span class="lb-rank {% if loop.index0 == 0 %}gold{% endif %}">{{ medallas[loop.index0] }}</span>
+      <span class="lb-name">
+        @{{ u.username }}
+        {% if es_yo %}<span class="badge accent" style="margin-left:8px;">tú</span>{% endif %}
+      </span>
+      <span class="lb-points">{{ u.points | formato_puntos }}</span>
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="empty">
+    <div class="empty-icon">🏆</div>
+    <p>Sin datos aún</p>
+  </div>
+{% endif %}
+
+<hr class="divider">
+<div class="stat-card" style="margin-top:0;">
+  <div class="label">Tus puntos actuales</div>
+  <div class="value accent">{{ usuario.points | formato_puntos }}</div>
+</div>
+{% endblock %}

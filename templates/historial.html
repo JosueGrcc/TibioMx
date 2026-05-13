@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Historial — TibioMx{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>Mi historial 📋</h2>
+  <p>Tus apuestas pasadas y resultados</p>
+</div>
+
+{% if jugadas %}
+  {% for j in jugadas %}
+    {% if j.won == true %}
+      {% set estado = '🏆 Ganaste' %}
+      {% set clase = 'accent' %}
+    {% elif j.won == false %}
+      {% set estado = '😔 Perdiste' %}
+      {% set clase = 'danger' %}
+    {% else %}
+      {% set estado = '⏳ En curso' %}
+      {% set clase = '' %}
+    {% endif %}
+    <div class="history-row">
+      <div>
+        <div class="history-title">{{ j.bet_title }}</div>
+        <div class="history-meta">
+          Aposté: <strong>{{ j.option }}</strong> · {{ j.amount }} pts ·
+          {{ j.timestamp[:10] }}
+          {% if j.winning_option and j.won == false %}
+            · Ganó: <em>{{ j.winning_option }}</em>
+          {% endif %}
+        </div>
+      </div>
+      <span class="badge {{ clase }}">{{ estado }}</span>
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="empty">
+    <div class="empty-icon">📋</div>
+    <p>No has apostado todavía. ¡Ve a las apuestas!</p>
+  </div>
+{% endif %}
+{% endblock %}

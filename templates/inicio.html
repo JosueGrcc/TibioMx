@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Inicio — TibioMx{% endblock %}
+{% block meta %}<meta http-equiv="refresh" content="20">{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>¡Buenas, {{ usuario.username }}! 👋</h2>
+  <p>¿Qué va a pasar hoy en la uni?</p>
+</div>
+
+<div class="grid-2">
+  <div class="stat-card">
+    <div class="label">Mis puntos</div>
+    <div class="value accent">{{ usuario.points | formato_puntos }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Apuestas activas</div>
+    <div class="value gold">{{ apuestas | length }}</div>
+  </div>
+</div>
+
+<div class="btn-row" style="margin-bottom:28px;">
+  <a href="{{ url_for('apuestas') }}#nueva" class="btn primary">+ Nueva apuesta</a>
+  <a href="{{ url_for('apuestas') }}" class="btn">Ver todas →</a>
+</div>
+
+<div class="section-title-row">
+  <h3>🔴 En vivo ahora</h3>
+  <span class="refresh-notice">↻ se actualiza cada 20s</span>
+</div>
+
+{% if en_vivo %}
+  {% for apuesta in en_vivo %}
+    <div class="bet-card">
+      <div class="bet-title">{{ apuesta.title }}</div>
+      {% if apuesta.description %}
+        <div class="bet-desc">{{ apuesta.description }}</div>
+      {% endif %}
+      <div class="bet-meta">
+        <span class="badge">Por @{{ apuesta.creator_username }}</span>
+        <span class="badge gold">🏦 {{ apuesta.total_pool }} pts en juego</span>
+        <span class="badge accent">⏱ {{ apuesta.ends_at | tiempo_restante }}</span>
+        <span class="badge">{{ apuesta.wager_count }} apostando</span>
+      </div>
+      <div class="pool-bar">
+        <div class="pool-fill" style="width: {{ [apuesta.wager_count * 10, 100] | min }}%"></div>
+      </div>
+
+      {% if apuesta.live_participants %}
+        <div class="live-feed">
+          <div class="live-feed-title">🔴 Últimas jugadas</div>
+          {% for p in apuesta.live_participants[-5:] | reverse %}
+            <div class="live-entry">
+              <span class="live-user">{{ p.username }}</span>
+              <span class="live-option">→ {{ p.option }}</span>
+              <span class="live-amount">{{ p.amount }} pts</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div style="margin-top:12px;">
+        <a href="{{ url_for('apuestas') }}" class="btn sm">Apostar →</a>
+      </div>
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="empty">
+    <div class="empty-icon">🔴</div>
+    <p>Sin actividad en vivo ahora mismo</p>
+  </div>
+{% endif %}
+{% endblock %}
