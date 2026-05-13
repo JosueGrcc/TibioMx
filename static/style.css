@@ -1,6 +1,9 @@
 /* ── Google Fonts ── */
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap');
 
+/* ── Google Fonts ── */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap');
+
 /* ── Variables ── */
 :root {
   --c-bg: #0c0b10;
@@ -691,4 +694,112 @@ details.modal-wrap summary::-webkit-details-marker { display: none; }
   .reload-btn { bottom: 16px; right: 16px; width: 40px; height: 40px; }
   .video-admin-card { flex-direction: column; }
   .video-admin-actions { flex-direction: row; }
+}
+
+/* Logout button in sidebar */
+.logout-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--c-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .2s;
+  flex-shrink: 0;
+  margin-left: auto;
+  text-decoration: none;
+}
+.logout-btn:hover {
+  background: rgba(255,107,107,.1);
+  border-color: rgba(255,107,107,.25);
+  color: var(--c-accent2);
+}
+.logout-btn svg { width: 15px; height: 15px; }
+
+/* Buy points card */
+.buy-points-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.buy-points-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(200,255,87,.04) 0%, transparent 60%);
+  pointer-events: none;
+}
+.buy-points-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.buy-points-packages {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.pkg-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 12px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--c-surface2);
+  border: 1px solid var(--c-border);
+  cursor: pointer;
+  transition: all .2s;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--c-text);
+  text-align: center;
+}
+.pkg-btn:hover {
+  border-color: rgba(200,255,87,.35);
+  background: rgba(200,255,87,.06);
+}
+.pkg-btn.selected {
+  border-color: var(--c-accent);
+  background: rgba(200,255,87,.1);
+}
+.pkg-pts {
+  font-family: 'Syne', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--c-accent);
+}
+.pkg-price {
+  font-size: 11px;
+  color: var(--c-muted);
+  font-family: 'Space Mono', monospace;
+}
+.pkg-badge {
+  font-size: 9px;
+  background: rgba(255,209,102,.15);
+  color: var(--c-gold);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: 'Space Mono', monospace;
+}
+.buy-points-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.buy-points-disclaimer {
+  font-size: 11px;
+  color: var(--c-muted);
+  font-family: 'Space Mono', monospace;
 }

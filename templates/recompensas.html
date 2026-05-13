@@ -7,6 +7,46 @@
   <p>Más formas de conseguir CuckostaPoints</p>
 </div>
 
+<!-- Comprar puntos -->
+<div class="buy-points-card">
+  <div class="buy-points-header">
+    <div style="font-size:32px;">💳</div>
+    <div>
+      <p style="font-weight:600; font-family:'Syne',sans-serif; font-size:16px; margin-bottom:3px;">Comprar CuckostaPoints</p>
+      <p style="font-size:13px; color:var(--c-muted);">Recarga al instante y no te quedes sin puntos</p>
+    </div>
+  </div>
+
+  <div class="buy-points-packages">
+    <button class="pkg-btn" onclick="selectPkg(this, 500, 15)">
+      <span class="pkg-pts">500 pts</span>
+      <span class="pkg-price">$15 MXN</span>
+    </button>
+    <button class="pkg-btn" onclick="selectPkg(this, 1200, 29)">
+      <span class="pkg-pts">1,200 pts</span>
+      <span class="pkg-price">$29 MXN</span>
+      <span class="pkg-badge">+20%</span>
+    </button>
+    <button class="pkg-btn selected" onclick="selectPkg(this, 2500, 49)">
+      <span class="pkg-pts">2,500 pts</span>
+      <span class="pkg-price">$49 MXN</span>
+      <span class="pkg-badge">POPULAR</span>
+    </button>
+    <button class="pkg-btn" onclick="selectPkg(this, 6000, 99)">
+      <span class="pkg-pts">6,000 pts</span>
+      <span class="pkg-price">$99 MXN</span>
+      <span class="pkg-badge">+40%</span>
+    </button>
+  </div>
+
+  <div class="buy-points-footer">
+    <span class="buy-points-disclaimer">🔒 Pago seguro · Acreditación inmediata</span>
+    <button class="btn primary" onclick="handleBuy()">
+      💳 Comprar — <span id="buy-price">$49 MXN</span>
+    </button>
+  </div>
+</div>
+
 <!-- Bono diario -->
 <div class="card" style="display:flex; align-items:center; gap:16px;">
   <div style="font-size:32px;">🌅</div>
@@ -90,6 +130,19 @@
 </div>
 
 <script>
+let selectedPkg = { pts: 2500, price: 49 };
+
+function selectPkg(el, pts, price) {
+  document.querySelectorAll('.pkg-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedPkg = { pts, price };
+  document.getElementById('buy-price').textContent = '$' + price + ' MXN';
+}
+
+function handleBuy() {
+  alert('💳 Pasarela de pago próximamente\n\nPaquete seleccionado: ' + selectedPkg.pts.toLocaleString() + ' pts por $' + selectedPkg.price + ' MXN');
+}
+
 function startAd(videoId) {
   const video   = document.getElementById('player-' + videoId);
   const overlay = document.getElementById('overlay-' + videoId);
