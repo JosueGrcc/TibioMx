@@ -177,10 +177,10 @@
   .live-entry {
     display: flex; justify-content: space-between; align-items: center;
     padding: 6px 0; border-bottom: 1px solid var(--c-border);
-    font-size: 12px; animation: fadeIn .4s ease;
+    font-size: 12px; animation: aparecer .4s ease;
   }
   .live-entry:last-child { border-bottom: none; }
-  @keyframes fadeIn { from { opacity:0; transform: translateY(-4px); } to { opacity:1; transform: none; } }
+  @keyframes aparecer { from { opacity:0; transform: translateY(-4px); } to { opacity:1; transform: none; } }
   .live-user { font-weight: 500; }
   .live-option { color: var(--c-muted); }
   .live-amount { color: var(--c-accent); font-family: 'Space Mono', monospace; font-size: 11px; }
@@ -247,12 +247,12 @@
     background: var(--c-surface2); border: 1px solid var(--c-border2);
     border-radius: var(--radius-sm); padding: 12px 18px;
     font-size: 13px; max-width: 320px; box-shadow: 0 4px 24px rgba(0,0,0,.4);
-    animation: slideIn .3s ease; display: flex; align-items: center; gap: 10px;
+    animation: deslizar .3s ease; display: flex; align-items: center; gap: 10px;
   }
   .toast.win { border-color: rgba(200,255,87,.3); background: rgba(200,255,87,.05); color: var(--c-accent); }
   .toast.lose { border-color: rgba(255,107,107,.3); background: rgba(255,107,107,.05); color: var(--c-accent2); }
   .toast.info { border-color: rgba(167,139,250,.3); background: rgba(167,139,250,.05); color: var(--c-purple); }
-  @keyframes slideIn { from { opacity:0; transform: translateX(20px); } to { opacity:1; transform: none; } }
+  @keyframes deslizar { from { opacity:0; transform: translateX(20px); } to { opacity:1; transform: none; } }
 
   /* ── Modal ── */
   .modal-overlay {
@@ -353,22 +353,22 @@
 </head>
 <body>
 
-<!-- Toast container -->
+<!-- Contenedor de notificaciones -->
 <div id="toast-container"></div>
 
-<!-- Hamburger -->
-<button class="hamburger" id="hamburger" onclick="toggleSidebar()">
+<!-- Botón de menú móvil -->
+<button class="hamburger" id="hamburger" onclick="alternarBarraLateral()">
   <span></span><span></span><span></span>
 </button>
 
-<!-- Auth screen -->
+<!-- Pantalla de autenticación -->
 <div id="auth-section">
   <div class="auth-box">
     <div class="auth-logo">TibioMx 🎲</div>
     <p class="auth-sub">Apuestas cotidianas universitarias</p>
     <div class="auth-tabs">
-      <div class="auth-tab active" onclick="switchAuthTab('login')">Entrar</div>
-      <div class="auth-tab" onclick="switchAuthTab('register')">Registro</div>
+      <div class="auth-tab active" onclick="cambiarPestanaAuth('login')">Entrar</div>
+      <div class="auth-tab" onclick="cambiarPestanaAuth('register')">Registro</div>
     </div>
 
     <!-- Login -->
@@ -382,10 +382,10 @@
         <input type="password" id="login-pass" placeholder="••••••••">
       </div>
       <div id="login-error" class="error-msg"></div>
-      <button class="btn primary" style="width:100%; margin-top:8px;" onclick="doLogin()">Entrar</button>
+      <button class="btn primary" style="width:100%; margin-top:8px;" onclick="iniciarSesion()">Entrar</button>
     </div>
 
-    <!-- Register -->
+    <!-- Registro -->
     <div id="register-form" style="display:none;">
       <div class="form-group">
         <label>Nombre de usuario</label>
@@ -401,26 +401,26 @@
       </div>
       <div id="reg-error" class="error-msg"></div>
       <div id="reg-success" class="success-msg"></div>
-      <button class="btn primary" style="width:100%; margin-top:8px;" onclick="doRegister()">Crear cuenta (+1,000 CuckostaPoints 🎉)</button>
+      <button class="btn primary" style="width:100%; margin-top:8px;" onclick="registrarse()">Crear cuenta (+1,000 CuckostaPoints 🎉)</button>
     </div>
   </div>
 </div>
 
-<!-- Main app -->
+<!-- App principal -->
 <div id="app" style="display:none;">
-  <!-- Sidebar -->
+  <!-- Barra lateral -->
   <div id="sidebar">
     <div class="logo">
       <h1>TibioMx 🎲</h1>
       <span>cuckostapoints</span>
     </div>
     <nav>
-      <div class="nav-item active" onclick="showSection('home')"><span class="nav-icon">🏠</span> Inicio</div>
-      <div class="nav-item" onclick="showSection('bets')"><span class="nav-icon">🎯</span> Apuestas</div>
-      <div class="nav-item" onclick="showSection('groups')"><span class="nav-icon">👥</span> Grupos</div>
-      <div class="nav-item" onclick="showSection('history')"><span class="nav-icon">📋</span> Mi historial</div>
-      <div class="nav-item" onclick="showSection('leaderboard')"><span class="nav-icon">🏆</span> Top 5</div>
-      <div class="nav-item" onclick="showSection('rewards')"><span class="nav-icon">💰</span> Ganar puntos</div>
+      <div class="nav-item active" onclick="mostrarSeccion('home')"><span class="nav-icon">🏠</span> Inicio</div>
+      <div class="nav-item" onclick="mostrarSeccion('bets')"><span class="nav-icon">🎯</span> Apuestas</div>
+      <div class="nav-item" onclick="mostrarSeccion('groups')"><span class="nav-icon">👥</span> Grupos</div>
+      <div class="nav-item" onclick="mostrarSeccion('history')"><span class="nav-icon">📋</span> Mi historial</div>
+      <div class="nav-item" onclick="mostrarSeccion('leaderboard')"><span class="nav-icon">🏆</span> Top 5</div>
+      <div class="nav-item" onclick="mostrarSeccion('rewards')"><span class="nav-icon">💰</span> Ganar puntos</div>
     </nav>
     <div class="sidebar-user">
       <div class="avatar" id="sidebar-avatar">?</div>
@@ -431,10 +431,10 @@
     </div>
   </div>
 
-  <!-- Main content -->
+  <!-- Contenido principal -->
   <div id="main">
 
-    <!-- HOME -->
+    <!-- INICIO -->
     <div id="section-home" class="section active">
       <div class="page-header">
         <h2>¡Buenas, <span id="home-username">amigo</span>! 👋</h2>
@@ -451,30 +451,30 @@
         </div>
       </div>
       <div style="display:flex; gap:10px; margin-bottom:24px;">
-        <button class="btn primary" onclick="openCreateBetModal()">+ Nueva apuesta</button>
-        <button class="btn" onclick="showSection('bets')">Ver todas →</button>
+        <button class="btn primary" onclick="abrirModalCrearApuesta()">+ Nueva apuesta</button>
+        <button class="btn" onclick="mostrarSeccion('bets')">Ver todas →</button>
       </div>
       <h3 style="font-family:'Syne',sans-serif; font-size:16px; margin-bottom:14px;">🔴 En vivo ahora</h3>
       <div id="home-live-bets"></div>
     </div>
 
-    <!-- BETS -->
+    <!-- APUESTAS -->
     <div id="section-bets" class="section">
       <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start;">
         <div>
           <h2>Apuestas 🎯</h2>
           <p>Apuesta tus CuckostaPoints en lo que pase hoy</p>
         </div>
-        <button class="btn primary" onclick="openCreateBetModal()">+ Crear</button>
+        <button class="btn primary" onclick="abrirModalCrearApuesta()">+ Crear</button>
       </div>
       <div class="section-tabs">
-        <div class="section-tab active" onclick="switchBetTab('public')">Públicas</div>
-        <div class="section-tab" onclick="switchBetTab('groups')">De mis grupos</div>
+        <div class="section-tab active" onclick="cambiarPestanaApuestas('public')">Públicas</div>
+        <div class="section-tab" onclick="cambiarPestanaApuestas('groups')">De mis grupos</div>
       </div>
       <div id="bets-list"></div>
     </div>
 
-    <!-- GROUPS -->
+    <!-- GRUPOS -->
     <div id="section-groups" class="section">
       <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start;">
         <div>
@@ -482,14 +482,14 @@
           <p>Apuesta solo con tus cuates</p>
         </div>
         <div style="display:flex; gap:8px;">
-          <button class="btn" onclick="openJoinGroupModal()">Unirse</button>
-          <button class="btn primary" onclick="openCreateGroupModal()">+ Crear</button>
+          <button class="btn" onclick="abrirModalUnirseGrupo()">Unirse</button>
+          <button class="btn primary" onclick="abrirModalCrearGrupo()">+ Crear</button>
         </div>
       </div>
       <div id="groups-list"></div>
     </div>
 
-    <!-- HISTORY -->
+    <!-- HISTORIAL -->
     <div id="section-history" class="section">
       <div class="page-header">
         <h2>Mi historial 📋</h2>
@@ -498,7 +498,7 @@
       <div id="history-list"></div>
     </div>
 
-    <!-- LEADERBOARD -->
+    <!-- TABLA DE POSICIONES -->
     <div id="section-leaderboard" class="section">
       <div class="page-header">
         <h2>Top 5 🏆</h2>
@@ -507,7 +507,7 @@
       <div id="leaderboard-list"></div>
     </div>
 
-    <!-- REWARDS -->
+    <!-- RECOMPENSAS -->
     <div id="section-rewards" class="section">
       <div class="page-header">
         <h2>Ganar puntos 💰</h2>
@@ -523,7 +523,7 @@
           <span class="badge accent">+100/día</span>
         </div>
       </div>
-      <div class="ad-box" onclick="watchAd()">
+      <div class="ad-box" onclick="verAnuncio()">
         <div class="ad-icon">📺</div>
         <p><strong>Ver un anuncio</strong> y ganar entre 10–50 CuckostaPoints</p>
         <p style="font-size:11px; margin-top:6px; font-family:'Space Mono',monospace;">Disponible cada hora</p>
@@ -542,7 +542,7 @@
   </div>
 </div>
 
-<!-- CREATE BET MODAL -->
+<!-- MODAL: CREAR APUESTA -->
 <div class="modal-overlay" id="create-bet-modal">
   <div class="modal">
     <h3>Nueva apuesta 🎲</h3>
@@ -559,14 +559,14 @@
       <div class="options-builder" id="options-builder">
         <div class="option-input-row">
           <input type="text" placeholder="Sí, llega tarde" class="bet-option-input">
-          <button class="btn" onclick="removeOptionRow(this)">✕</button>
+          <button class="btn" onclick="eliminarFilaOpcion(this)">✕</button>
         </div>
         <div class="option-input-row">
           <input type="text" placeholder="No, llega puntual" class="bet-option-input">
-          <button class="btn" onclick="removeOptionRow(this)">✕</button>
+          <button class="btn" onclick="eliminarFilaOpcion(this)">✕</button>
         </div>
       </div>
-      <button class="btn" style="font-size:12px;" onclick="addOptionRow()">+ Agregar opción</button>
+      <button class="btn" style="font-size:12px;" onclick="agregarFilaOpcion()">+ Agregar opción</button>
     </div>
     <div class="form-group">
       <label>Termina el</label>
@@ -580,13 +580,13 @@
     </div>
     <div id="create-bet-error" class="error-msg"></div>
     <div class="modal-footer">
-      <button class="btn" onclick="closeModal('create-bet-modal')">Cancelar</button>
-      <button class="btn primary" onclick="submitCreateBet()">Crear apuesta</button>
+      <button class="btn" onclick="cerrarModal('create-bet-modal')">Cancelar</button>
+      <button class="btn primary" onclick="enviarCrearApuesta()">Crear apuesta</button>
     </div>
   </div>
 </div>
 
-<!-- CREATE GROUP MODAL -->
+<!-- MODAL: CREAR GRUPO -->
 <div class="modal-overlay" id="create-group-modal">
   <div class="modal">
     <h3>Crear grupo 👥</h3>
@@ -600,13 +600,13 @@
     </div>
     <div id="create-group-error" class="error-msg"></div>
     <div class="modal-footer">
-      <button class="btn" onclick="closeModal('create-group-modal')">Cancelar</button>
-      <button class="btn primary" onclick="submitCreateGroup()">Crear grupo</button>
+      <button class="btn" onclick="cerrarModal('create-group-modal')">Cancelar</button>
+      <button class="btn primary" onclick="enviarCrearGrupo()">Crear grupo</button>
     </div>
   </div>
 </div>
 
-<!-- JOIN GROUP MODAL -->
+<!-- MODAL: UNIRSE A GRUPO -->
 <div class="modal-overlay" id="join-group-modal">
   <div class="modal">
     <h3>Unirse a grupo 🔑</h3>
@@ -616,195 +616,195 @@
     </div>
     <div id="join-group-error" class="error-msg"></div>
     <div class="modal-footer">
-      <button class="btn" onclick="closeModal('join-group-modal')">Cancelar</button>
-      <button class="btn primary" onclick="submitJoinGroup()">Unirse</button>
+      <button class="btn" onclick="cerrarModal('join-group-modal')">Cancelar</button>
+      <button class="btn primary" onclick="enviarUnirseGrupo()">Unirse</button>
     </div>
   </div>
 </div>
 
-<!-- RESOLVE BET MODAL -->
+<!-- MODAL: RESOLVER APUESTA -->
 <div class="modal-overlay" id="resolve-bet-modal">
   <div class="modal">
     <h3>¿Qué pasó? ✅</h3>
     <p style="font-size:14px; color:var(--c-muted); margin-bottom:20px;">Selecciona qué opción ganó</p>
     <div id="resolve-options-list"></div>
     <div class="modal-footer">
-      <button class="btn" onclick="closeModal('resolve-bet-modal')">Cancelar</button>
+      <button class="btn" onclick="cerrarModal('resolve-bet-modal')">Cancelar</button>
     </div>
   </div>
 </div>
 
 <script>
-// ─── State ────────────────────────────────────────────────────────────────────
-const API = '';  // empty = same origin
+// ─── Estado global ────────────────────────────────────────────────────────────
+const API = '';  // vacío = mismo origen
 let token = localStorage.getItem('tibiomx_token');
-let user = JSON.parse(localStorage.getItem('tibiomx_user') || 'null');
-let currentBetTab = 'public';
-let resolveBetId = null;
-let livePollInterval = null;
+let usuario = JSON.parse(localStorage.getItem('tibiomx_user') || 'null');
+let pestanaApuestasActual = 'public';
+let idApuestaAResolver = null;
+let intervaloActualizacionEnVivo = null;
 
-// ─── Init ─────────────────────────────────────────────────────────────────────
+// ─── Inicialización ───────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  if (token && user) {
-    showApp();
-    loadAll();
-    startLivePoll();
+  if (token && usuario) {
+    mostrarApp();
+    cargarTodo();
+    iniciarActualizacionEnVivo();
   }
-  // Set min datetime to now
-  const dtInput = document.getElementById('bet-ends-at');
-  if (dtInput) {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    dtInput.min = now.toISOString().slice(0,16);
+  // Establecer fecha mínima como ahora
+  const inputFecha = document.getElementById('bet-ends-at');
+  if (inputFecha) {
+    const ahora = new Date();
+    ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
+    inputFecha.min = ahora.toISOString().slice(0,16);
   }
 });
 
-// ─── Auth ─────────────────────────────────────────────────────────────────────
-function switchAuthTab(tab) {
+// ─── Autenticación ────────────────────────────────────────────────────────────
+function cambiarPestanaAuth(pestana) {
   document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
   event.target.classList.add('active');
-  document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
-  document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
+  document.getElementById('login-form').style.display = pestana === 'login' ? 'block' : 'none';
+  document.getElementById('register-form').style.display = pestana === 'register' ? 'block' : 'none';
 }
 
-async function doLogin() {
-  const email = document.getElementById('login-email').value.trim();
-  const pass = document.getElementById('login-pass').value;
-  const errEl = document.getElementById('login-error');
-  errEl.style.display = 'none';
+async function iniciarSesion() {
+  const correo = document.getElementById('login-email').value.trim();
+  const contrasena = document.getElementById('login-pass').value;
+  const elementoError = document.getElementById('login-error');
+  elementoError.style.display = 'none';
   try {
     const res = await fetch(`${API}/api/login`, {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({email, password: pass})
+      body: JSON.stringify({email: correo, password: contrasena})
     });
-    const data = await res.json();
-    if (!res.ok) { errEl.textContent = data.error; errEl.style.display = 'block'; return; }
-    token = data.token;
-    user = data.user;
+    const datos = await res.json();
+    if (!res.ok) { elementoError.textContent = datos.error; elementoError.style.display = 'block'; return; }
+    token = datos.token;
+    usuario = datos.user;
     localStorage.setItem('tibiomx_token', token);
-    localStorage.setItem('tibiomx_user', JSON.stringify(user));
-    if (data.daily_bonus?.bonus > 0) {
-      showToast(`🌅 +${data.daily_bonus.bonus} CuckostaPoints de bono diario!`, 'win');
+    localStorage.setItem('tibiomx_user', JSON.stringify(usuario));
+    if (datos.daily_bonus?.bonus > 0) {
+      mostrarNotificacion(`🌅 +${datos.daily_bonus.bonus} CuckostaPoints de bono diario!`, 'win');
     }
-    showApp();
-    loadAll();
-    startLivePoll();
-  } catch(e) { errEl.textContent = 'Error de conexión'; errEl.style.display = 'block'; }
+    mostrarApp();
+    cargarTodo();
+    iniciarActualizacionEnVivo();
+  } catch(e) { elementoError.textContent = 'Error de conexión'; elementoError.style.display = 'block'; }
 }
 
-async function doRegister() {
-  const username = document.getElementById('reg-username').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
-  const pass = document.getElementById('reg-pass').value;
-  const errEl = document.getElementById('reg-error');
-  const okEl = document.getElementById('reg-success');
-  errEl.style.display = 'none'; okEl.style.display = 'none';
+async function registrarse() {
+  const nombreUsuario = document.getElementById('reg-username').value.trim();
+  const correo = document.getElementById('reg-email').value.trim();
+  const contrasena = document.getElementById('reg-pass').value;
+  const elementoError = document.getElementById('reg-error');
+  const elementoExito = document.getElementById('reg-success');
+  elementoError.style.display = 'none'; elementoExito.style.display = 'none';
   try {
     const res = await fetch(`${API}/api/register`, {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({username, email, password: pass})
+      body: JSON.stringify({username: nombreUsuario, email: correo, password: contrasena})
     });
-    const data = await res.json();
-    if (!res.ok) { errEl.textContent = data.error; errEl.style.display = 'block'; return; }
-    token = data.token; user = data.user;
+    const datos = await res.json();
+    if (!res.ok) { elementoError.textContent = datos.error; elementoError.style.display = 'block'; return; }
+    token = datos.token; usuario = datos.user;
     localStorage.setItem('tibiomx_token', token);
-    localStorage.setItem('tibiomx_user', JSON.stringify(user));
-    okEl.textContent = '¡Cuenta creada! Bienvenido con 1,000 puntos 🎉';
-    okEl.style.display = 'block';
-    setTimeout(() => { showApp(); loadAll(); startLivePoll(); }, 1200);
-  } catch(e) { errEl.textContent = 'Error de conexión'; errEl.style.display = 'block'; }
+    localStorage.setItem('tibiomx_user', JSON.stringify(usuario));
+    elementoExito.textContent = '¡Cuenta creada! Bienvenido con 1,000 puntos 🎉';
+    elementoExito.style.display = 'block';
+    setTimeout(() => { mostrarApp(); cargarTodo(); iniciarActualizacionEnVivo(); }, 1200);
+  } catch(e) { elementoError.textContent = 'Error de conexión'; elementoError.style.display = 'block'; }
 }
 
-function showApp() {
+function mostrarApp() {
   document.getElementById('auth-section').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
-  updateSidebar();
+  actualizarBarraLateral();
 }
 
-function updateSidebar() {
-  if (!user) return;
-  const initials = user.username.slice(0,2).toUpperCase();
-  document.getElementById('sidebar-avatar').textContent = initials;
-  document.getElementById('sidebar-username').textContent = '@' + user.username;
-  document.getElementById('sidebar-points').textContent = formatPts(user.points);
-  document.getElementById('home-username').textContent = user.username;
-  document.getElementById('home-points').textContent = formatPts(user.points);
+function actualizarBarraLateral() {
+  if (!usuario) return;
+  const iniciales = usuario.username.slice(0,2).toUpperCase();
+  document.getElementById('sidebar-avatar').textContent = iniciales;
+  document.getElementById('sidebar-username').textContent = '@' + usuario.username;
+  document.getElementById('sidebar-points').textContent = formatearPuntos(usuario.points);
+  document.getElementById('home-username').textContent = usuario.username;
+  document.getElementById('home-points').textContent = formatearPuntos(usuario.points);
 }
 
-// ─── Navigation ───────────────────────────────────────────────────────────────
-function showSection(name) {
+// ─── Navegación ───────────────────────────────────────────────────────────────
+function mostrarSeccion(nombre) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById(`section-${name}`).classList.add('active');
-  const navItems = document.querySelectorAll('.nav-item');
-  const map = {home:0,bets:1,groups:2,history:3,leaderboard:4,rewards:5};
-  navItems[map[name]]?.classList.add('active');
-  if (name === 'bets') loadBets();
-  if (name === 'groups') loadGroups();
-  if (name === 'history') loadHistory();
-  if (name === 'leaderboard') loadLeaderboard();
+  document.getElementById(`section-${nombre}`).classList.add('active');
+  const itemsNav = document.querySelectorAll('.nav-item');
+  const mapa = {home:0, bets:1, groups:2, history:3, leaderboard:4, rewards:5};
+  itemsNav[mapa[nombre]]?.classList.add('active');
+  if (nombre === 'bets') cargarApuestas();
+  if (nombre === 'groups') cargarGrupos();
+  if (nombre === 'history') cargarHistorial();
+  if (nombre === 'leaderboard') cargarTablaPosiciones();
   document.getElementById('sidebar').classList.remove('open');
 }
 
-function toggleSidebar() {
+function alternarBarraLateral() {
   document.getElementById('sidebar').classList.toggle('open');
 }
 
-// ─── Load All ─────────────────────────────────────────────────────────────────
-async function loadAll() {
-  await Promise.all([refreshUser(), loadBets(), loadGroups(), loadLeaderboard()]);
-  renderHomeLiveBets();
+// ─── Carga inicial ────────────────────────────────────────────────────────────
+async function cargarTodo() {
+  await Promise.all([actualizarUsuario(), cargarApuestas(), cargarGrupos(), cargarTablaPosiciones()]);
+  renderizarApuestasEnVivoInicio();
 }
 
-async function refreshUser() {
+async function actualizarUsuario() {
   try {
-    const data = await api('/api/me');
-    user = {...user, ...data};
-    localStorage.setItem('tibiomx_user', JSON.stringify(user));
-    updateSidebar();
+    const datos = await llamarAPI('/api/me');
+    usuario = {...usuario, ...datos};
+    localStorage.setItem('tibiomx_user', JSON.stringify(usuario));
+    actualizarBarraLateral();
   } catch(e) {}
 }
 
-// ─── Bets ─────────────────────────────────────────────────────────────────────
-let allBets = [];
+// ─── Apuestas ─────────────────────────────────────────────────────────────────
+let todasLasApuestas = [];
 
-async function loadBets() {
+async function cargarApuestas() {
   try {
-    allBets = await api('/api/bets');
-    const groupBets = [];
-    const userGroups = await api('/api/groups').catch(() => []);
-    for (const g of userGroups) {
-      const gb = await api(`/api/bets?group_id=${g.id}`).catch(() => []);
-      groupBets.push(...gb);
+    todasLasApuestas = await llamarAPI('/api/bets');
+    const apuestasDeGrupos = [];
+    const gruposDelUsuario = await llamarAPI('/api/groups').catch(() => []);
+    for (const g of gruposDelUsuario) {
+      const apuestasGrupo = await llamarAPI(`/api/bets?group_id=${g.id}`).catch(() => []);
+      apuestasDeGrupos.push(...apuestasGrupo);
     }
-    document.getElementById('home-active-bets').textContent = allBets.length;
-    renderBetsList(currentBetTab === 'public' ? allBets : groupBets);
-    renderHomeLiveBets();
+    document.getElementById('home-active-bets').textContent = todasLasApuestas.length;
+    renderizarListaApuestas(pestanaApuestasActual === 'public' ? todasLasApuestas : apuestasDeGrupos);
+    renderizarApuestasEnVivoInicio();
   } catch(e) {}
 }
 
-function renderBetsList(bets) {
+function renderizarListaApuestas(apuestas) {
   const el = document.getElementById('bets-list');
-  if (!bets.length) {
+  if (!apuestas.length) {
     el.innerHTML = '<div class="empty"><div class="empty-icon">🎯</div><p>No hay apuestas activas. ¡Crea la primera!</p></div>';
     return;
   }
-  el.innerHTML = bets.map(bet => renderBetCard(bet)).join('');
+  el.innerHTML = apuestas.map(apuesta => renderizarTarjetaApuesta(apuesta)).join('');
 }
 
-function renderBetCard(bet, compact=false) {
-  const isCreator = user && bet.creator === user.username;
-  const endDate = new Date(bet.ends_at);
-  const now = new Date();
-  const hoursLeft = Math.max(0, (endDate - now) / 3600000);
-  const timeStr = hoursLeft < 1 ? `${Math.round(hoursLeft*60)}min` : `${Math.round(hoursLeft)}h`;
+function renderizarTarjetaApuesta(apuesta, compacta=false) {
+  const esCreador = usuario && apuesta.creator === usuario.username;
+  const fechaFin = new Date(apuesta.ends_at);
+  const ahora = new Date();
+  const horasRestantes = Math.max(0, (fechaFin - ahora) / 3600000);
+  const textoTiempo = horasRestantes < 1 ? `${Math.round(horasRestantes*60)}min` : `${Math.round(horasRestantes)}h`;
 
-  const liveHTML = bet.live_participants?.length > 0 ? `
+  const htmlEnVivo = apuesta.live_participants?.length > 0 ? `
     <div class="live-feed">
       <h4>🔴 En vivo</h4>
-      ${bet.live_participants.slice(-5).reverse().map(p => `
+      ${apuesta.live_participants.slice(-5).reverse().map(p => `
         <div class="live-entry">
           <span class="live-user">${p.username}</span>
           <span class="live-option">→ ${p.option}</span>
@@ -813,319 +813,322 @@ function renderBetCard(bet, compact=false) {
       `).join('')}
     </div>` : '';
 
-  const resolveBtn = isCreator ? `<button class="btn" style="font-size:12px;" onclick="openResolveBet('${bet.id}')">✅ Resolver</button>` : '';
+  const botonResolver = esCreador ? `<button class="btn" style="font-size:12px;" onclick="abrirResolverApuesta('${apuesta.id}')">✅ Resolver</button>` : '';
 
   return `
     <div class="bet-card">
-      <div class="bet-title">${bet.title}</div>
-      ${bet.description ? `<div class="bet-desc">${bet.description}</div>` : ''}
+      <div class="bet-title">${apuesta.title}</div>
+      ${apuesta.description ? `<div class="bet-desc">${apuesta.description}</div>` : ''}
       <div class="bet-meta">
-        <span class="badge">Por @${bet.creator}</span>
-        <span class="badge gold">🏦 ${bet.total_pool} pts en juego</span>
-        <span class="badge accent">⏱ ${timeStr} restante</span>
-        <span class="badge">${bet.wager_count} apostando</span>
+        <span class="badge">Por @${apuesta.creator}</span>
+        <span class="badge gold">🏦 ${apuesta.total_pool} pts en juego</span>
+        <span class="badge accent">⏱ ${textoTiempo} restante</span>
+        <span class="badge">${apuesta.wager_count} apostando</span>
       </div>
-      <div class="pool-bar"><div class="pool-fill" style="width:${Math.min(100, bet.wager_count * 10)}%"></div></div>
+      <div class="pool-bar"><div class="pool-fill" style="width:${Math.min(100, apuesta.wager_count * 10)}%"></div></div>
       <div class="options-row">
-        ${bet.options.map(opt => `<button class="opt-btn" onclick="selectOption(this, '${bet.id}', '${opt}')">${opt}</button>`).join('')}
+        ${apuesta.options.map(opt => `<button class="opt-btn" onclick="seleccionarOpcion(this, '${apuesta.id}', '${opt}')">${opt}</button>`).join('')}
       </div>
-      <div class="wager-row" id="wager-row-${bet.id}" style="display:none;">
-        <input type="number" id="amount-${bet.id}" placeholder="Puntos" min="1" max="${user?.points || 1000}">
-        <button class="btn primary" onclick="submitWager('${bet.id}')">Apostar 🎲</button>
-        <button class="btn" onclick="cancelWager('${bet.id}')">✕</button>
+      <div class="wager-row" id="wager-row-${apuesta.id}" style="display:none;">
+        <input type="number" id="amount-${apuesta.id}" placeholder="Puntos" min="1" max="${usuario?.points || 1000}">
+        <button class="btn primary" onclick="enviarJugada('${apuesta.id}')">Apostar 🎲</button>
+        <button class="btn" onclick="cancelarJugada('${apuesta.id}')">✕</button>
       </div>
-      ${liveHTML}
-      ${resolveBtn ? `<div style="margin-top:10px;">${resolveBtn}</div>` : ''}
+      ${htmlEnVivo}
+      ${botonResolver ? `<div style="margin-top:10px;">${botonResolver}</div>` : ''}
     </div>`;
 }
 
-function renderHomeLiveBets() {
+function renderizarApuestasEnVivoInicio() {
   const el = document.getElementById('home-live-bets');
   if (!el) return;
-  const active = allBets.filter(b => b.live_participants?.length > 0).slice(0,3);
-  if (!active.length) {
+  const activas = todasLasApuestas.filter(b => b.live_participants?.length > 0).slice(0,3);
+  if (!activas.length) {
     el.innerHTML = '<div class="empty" style="padding:30px 0;"><p>Sin actividad en vivo ahora mismo</p></div>';
     return;
   }
-  el.innerHTML = active.map(b => renderBetCard(b)).join('');
+  el.innerHTML = activas.map(b => renderizarTarjetaApuesta(b)).join('');
 }
 
-let selectedOptions = {};
-function selectOption(btn, betId, option) {
+let opcionesSeleccionadas = {};
+function seleccionarOpcion(boton, idApuesta, opcion) {
   document.querySelectorAll(`#bets-list .opt-btn, #home-live-bets .opt-btn`).forEach(b => {
-    if (b.closest('.bet-card')?.querySelector(`[id="wager-row-${betId}"]`)) b.classList.remove('selected');
+    if (b.closest('.bet-card')?.querySelector(`[id="wager-row-${idApuesta}"]`)) b.classList.remove('selected');
   });
-  btn.classList.add('selected');
-  selectedOptions[betId] = option;
-  document.getElementById(`wager-row-${betId}`).style.display = 'flex';
+  boton.classList.add('selected');
+  opcionesSeleccionadas[idApuesta] = opcion;
+  document.getElementById(`wager-row-${idApuesta}`).style.display = 'flex';
 }
 
-function cancelWager(betId) {
-  document.getElementById(`wager-row-${betId}`).style.display = 'none';
-  delete selectedOptions[betId];
+function cancelarJugada(idApuesta) {
+  document.getElementById(`wager-row-${idApuesta}`).style.display = 'none';
+  delete opcionesSeleccionadas[idApuesta];
 }
 
-async function submitWager(betId) {
-  const option = selectedOptions[betId];
-  const amount = parseInt(document.getElementById(`amount-${betId}`).value);
-  if (!option) { showToast('Selecciona una opción', 'info'); return; }
-  if (!amount || amount <= 0) { showToast('Ingresa una cantidad válida', 'info'); return; }
+async function enviarJugada(idApuesta) {
+  const opcion = opcionesSeleccionadas[idApuesta];
+  const cantidad = parseInt(document.getElementById(`amount-${idApuesta}`).value);
+  if (!opcion) { mostrarNotificacion('Selecciona una opción', 'info'); return; }
+  if (!cantidad || cantidad <= 0) { mostrarNotificacion('Ingresa una cantidad válida', 'info'); return; }
   try {
-    const data = await api(`/api/bets/${betId}/wager`, 'POST', {option, amount});
-    showToast(`🎲 ¡Apostaste ${amount} pts en "${option}"!`, 'win');
-    user.points = data.new_points;
-    localStorage.setItem('tibiomx_user', JSON.stringify(user));
-    updateSidebar();
-    loadBets();
-  } catch(e) { showToast(e.message || 'Error al apostar', 'lose'); }
+    const datos = await llamarAPI(`/api/bets/${idApuesta}/wager`, 'POST', {option: opcion, amount: cantidad});
+    mostrarNotificacion(`🎲 ¡Apostaste ${cantidad} pts en "${opcion}"!`, 'win');
+    usuario.points = datos.new_points;
+    localStorage.setItem('tibiomx_user', JSON.stringify(usuario));
+    actualizarBarraLateral();
+    cargarApuestas();
+  } catch(e) { mostrarNotificacion(e.message || 'Error al apostar', 'lose'); }
 }
 
-function switchBetTab(tab) {
-  currentBetTab = tab;
+function cambiarPestanaApuestas(pestana) {
+  pestanaApuestasActual = pestana;
   document.querySelectorAll('.section-tab').forEach(t => t.classList.remove('active'));
   event.target.classList.add('active');
-  loadBets();
+  cargarApuestas();
 }
 
-// ─── Create Bet Modal ─────────────────────────────────────────────────────────
-async function openCreateBetModal() {
-  const sel = document.getElementById('bet-group-select');
-  sel.innerHTML = '<option value="">Pública (todos pueden ver)</option>';
-  const groups = await api('/api/groups').catch(() => []);
-  groups.forEach(g => {
-    sel.innerHTML += `<option value="${g.id}">${g.name}</option>`;
+// ─── Modal: Crear apuesta ─────────────────────────────────────────────────────
+async function abrirModalCrearApuesta() {
+  const selector = document.getElementById('bet-group-select');
+  selector.innerHTML = '<option value="">Pública (todos pueden ver)</option>';
+  const grupos = await llamarAPI('/api/groups').catch(() => []);
+  grupos.forEach(g => {
+    selector.innerHTML += `<option value="${g.id}">${g.name}</option>`;
   });
   document.getElementById('create-bet-modal').classList.add('open');
 }
 
-function addOptionRow() {
-  const builder = document.getElementById('options-builder');
-  const row = document.createElement('div');
-  row.className = 'option-input-row';
-  row.innerHTML = `<input type="text" placeholder="Otra opción..." class="bet-option-input"><button class="btn" onclick="removeOptionRow(this)">✕</button>`;
-  builder.appendChild(row);
+function agregarFilaOpcion() {
+  const constructor = document.getElementById('options-builder');
+  const fila = document.createElement('div');
+  fila.className = 'option-input-row';
+  fila.innerHTML = `<input type="text" placeholder="Otra opción..." class="bet-option-input"><button class="btn" onclick="eliminarFilaOpcion(this)">✕</button>`;
+  constructor.appendChild(fila);
 }
 
-function removeOptionRow(btn) {
-  const rows = document.querySelectorAll('.option-input-row');
-  if (rows.length <= 2) { showToast('Mínimo 2 opciones', 'info'); return; }
-  btn.parentElement.remove();
+function eliminarFilaOpcion(boton) {
+  const filas = document.querySelectorAll('.option-input-row');
+  if (filas.length <= 2) { mostrarNotificacion('Mínimo 2 opciones', 'info'); return; }
+  boton.parentElement.remove();
 }
 
-async function submitCreateBet() {
-  const title = document.getElementById('bet-title').value.trim();
-  const description = document.getElementById('bet-desc').value.trim();
-  const options = [...document.querySelectorAll('.bet-option-input')].map(i => i.value.trim()).filter(Boolean);
-  const ends_at = document.getElementById('bet-ends-at').value;
-  const group_id = document.getElementById('bet-group-select').value || null;
-  const errEl = document.getElementById('create-bet-error');
-  errEl.style.display = 'none';
-  if (!title || options.length < 2 || !ends_at) {
-    errEl.textContent = 'Completa todos los campos y al menos 2 opciones'; errEl.style.display = 'block'; return;
+async function enviarCrearApuesta() {
+  const titulo = document.getElementById('bet-title').value.trim();
+  const descripcion = document.getElementById('bet-desc').value.trim();
+  const opciones = [...document.querySelectorAll('.bet-option-input')].map(i => i.value.trim()).filter(Boolean);
+  const fechaFin = document.getElementById('bet-ends-at').value;
+  const idGrupo = document.getElementById('bet-group-select').value || null;
+  const elementoError = document.getElementById('create-bet-error');
+  elementoError.style.display = 'none';
+  if (!titulo || opciones.length < 2 || !fechaFin) {
+    elementoError.textContent = 'Completa todos los campos y al menos 2 opciones'; elementoError.style.display = 'block'; return;
   }
   try {
-    await api('/api/bets', 'POST', {title, description, options, ends_at, group_id});
-    closeModal('create-bet-modal');
-    showToast('¡Apuesta creada! 🎉', 'win');
-    loadBets();
-  } catch(e) { errEl.textContent = e.message; errEl.style.display = 'block'; }
+    await llamarAPI('/api/bets', 'POST', {title: titulo, description: descripcion, options: opciones, ends_at: fechaFin, group_id: idGrupo});
+    cerrarModal('create-bet-modal');
+    mostrarNotificacion('¡Apuesta creada! 🎉', 'win');
+    cargarApuestas();
+  } catch(e) { elementoError.textContent = e.message; elementoError.style.display = 'block'; }
 }
 
-// ─── Resolve Bet ──────────────────────────────────────────────────────────────
-function openResolveBet(betId) {
-  resolveBetId = betId;
-  const bet = allBets.find(b => b.id === betId);
-  if (!bet) return;
+// ─── Resolver apuesta ─────────────────────────────────────────────────────────
+function abrirResolverApuesta(idApuesta) {
+  idApuestaAResolver = idApuesta;
+  const apuesta = todasLasApuestas.find(b => b.id === idApuesta);
+  if (!apuesta) return;
   const el = document.getElementById('resolve-options-list');
-  el.innerHTML = bet.options.map(opt => `
-    <button class="btn" style="width:100%; margin-bottom:8px; font-size:14px;" onclick="submitResolve('${opt}')">
+  el.innerHTML = apuesta.options.map(opt => `
+    <button class="btn" style="width:100%; margin-bottom:8px; font-size:14px;" onclick="enviarResolucion('${opt}')">
       ${opt}
     </button>`).join('');
   document.getElementById('resolve-bet-modal').classList.add('open');
 }
 
-async function submitResolve(winning_option) {
+async function enviarResolucion(opcionGanadora) {
   try {
-    const data = await api(`/api/bets/${resolveBetId}/resolve`, 'POST', {winning_option});
-    closeModal('resolve-bet-modal');
-    showToast(`✅ Resuelta. ${data.winners?.filter(w=>w.won).length || 0} ganadores notificados`, 'win');
-    loadBets();
-    refreshUser();
-  } catch(e) { showToast(e.message || 'Error', 'lose'); }
+    const datos = await llamarAPI(`/api/bets/${idApuestaAResolver}/resolve`, 'POST', {winning_option: opcionGanadora});
+    cerrarModal('resolve-bet-modal');
+    mostrarNotificacion(`✅ Resuelta. ${datos.winners?.filter(w=>w.won).length || 0} ganadores notificados`, 'win');
+    cargarApuestas();
+    actualizarUsuario();
+  } catch(e) { mostrarNotificacion(e.message || 'Error', 'lose'); }
 }
 
-// ─── Groups ───────────────────────────────────────────────────────────────────
-let allGroups = [];
-async function loadGroups() {
+// ─── Grupos ───────────────────────────────────────────────────────────────────
+let todosLosGrupos = [];
+async function cargarGrupos() {
   try {
-    allGroups = await api('/api/groups');
-    renderGroups();
+    todosLosGrupos = await llamarAPI('/api/groups');
+    renderizarGrupos();
   } catch(e) {}
 }
 
-function renderGroups() {
+function renderizarGrupos() {
   const el = document.getElementById('groups-list');
-  if (!allGroups.length) {
+  if (!todosLosGrupos.length) {
     el.innerHTML = '<div class="empty"><div class="empty-icon">👥</div><p>No tienes grupos aún. ¡Crea uno o únete con un código!</p></div>'; return;
   }
-  el.innerHTML = allGroups.map(g => `
+  el.innerHTML = todosLosGrupos.map(g => `
     <div class="group-card">
       <div>
         <div class="group-name">${g.name}</div>
         <div style="font-size:12px; color:var(--c-muted); margin-top:3px;">${g.member_count} miembro${g.member_count !== 1 ? 's' : ''} · Creado por @${g.created_by}</div>
       </div>
       <div style="display:flex; align-items:center; gap:8px;">
-        <div class="group-code" onclick="copyCode('${g.invite_code}')" title="Clic para copiar">${g.invite_code}</div>
+        <div class="group-code" onclick="copiarCodigo('${g.invite_code}')" title="Clic para copiar">${g.invite_code}</div>
       </div>
     </div>`).join('');
 }
 
-function copyCode(code) {
-  navigator.clipboard?.writeText(code);
-  showToast(`Código ${code} copiado 📋`, 'info');
+function copiarCodigo(codigo) {
+  navigator.clipboard?.writeText(codigo);
+  mostrarNotificacion(`Código ${codigo} copiado 📋`, 'info');
 }
 
-function openCreateGroupModal() { document.getElementById('create-group-modal').classList.add('open'); }
-function openJoinGroupModal() { document.getElementById('join-group-modal').classList.add('open'); }
+function abrirModalCrearGrupo() { document.getElementById('create-group-modal').classList.add('open'); }
+function abrirModalUnirseGrupo() { document.getElementById('join-group-modal').classList.add('open'); }
 
-async function submitCreateGroup() {
-  const name = document.getElementById('group-name').value.trim();
-  const description = document.getElementById('group-desc').value.trim();
-  const errEl = document.getElementById('create-group-error');
-  errEl.style.display = 'none';
-  if (!name) { errEl.textContent = 'Nombre requerido'; errEl.style.display = 'block'; return; }
+async function enviarCrearGrupo() {
+  const nombre = document.getElementById('group-name').value.trim();
+  const descripcion = document.getElementById('group-desc').value.trim();
+  const elementoError = document.getElementById('create-group-error');
+  elementoError.style.display = 'none';
+  if (!nombre) { elementoError.textContent = 'Nombre requerido'; elementoError.style.display = 'block'; return; }
   try {
-    const data = await api('/api/groups', 'POST', {name, description});
-    closeModal('create-group-modal');
-    showToast(`¡Grupo creado! Código: ${data.invite_code} 🎉`, 'win');
-    loadGroups();
-  } catch(e) { errEl.textContent = e.message; errEl.style.display = 'block'; }
+    const datos = await llamarAPI('/api/groups', 'POST', {name: nombre, description: descripcion});
+    cerrarModal('create-group-modal');
+    mostrarNotificacion(`¡Grupo creado! Código: ${datos.invite_code} 🎉`, 'win');
+    cargarGrupos();
+  } catch(e) { elementoError.textContent = e.message; elementoError.style.display = 'block'; }
 }
 
-async function submitJoinGroup() {
-  const code = document.getElementById('join-code').value.trim().toUpperCase();
-  const errEl = document.getElementById('join-group-error');
-  errEl.style.display = 'none';
-  if (!code) { errEl.textContent = 'Ingresa el código'; errEl.style.display = 'block'; return; }
+async function enviarUnirseGrupo() {
+  const codigo = document.getElementById('join-code').value.trim().toUpperCase();
+  const elementoError = document.getElementById('join-group-error');
+  elementoError.style.display = 'none';
+  if (!codigo) { elementoError.textContent = 'Ingresa el código'; elementoError.style.display = 'block'; return; }
   try {
-    const data = await api('/api/groups/join', 'POST', {invite_code: code});
-    closeModal('join-group-modal');
-    showToast(data.message + ' 🎉', 'win');
-    loadGroups();
-  } catch(e) { errEl.textContent = e.message; errEl.style.display = 'block'; }
+    const datos = await llamarAPI('/api/groups/join', 'POST', {invite_code: codigo});
+    cerrarModal('join-group-modal');
+    mostrarNotificacion(datos.message + ' 🎉', 'win');
+    cargarGrupos();
+  } catch(e) { elementoError.textContent = e.message; elementoError.style.display = 'block'; }
 }
 
-// ─── History ──────────────────────────────────────────────────────────────────
-async function loadHistory() {
+// ─── Historial ────────────────────────────────────────────────────────────────
+async function cargarHistorial() {
   try {
-    const wagers = await api('/api/bets/my-wagers');
+    const jugadas = await llamarAPI('/api/bets/my-wagers');
     const el = document.getElementById('history-list');
-    if (!wagers.length) {
+    if (!jugadas.length) {
       el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><p>No has apostado todavía. ¡Ve a las apuestas!</p></div>'; return;
     }
-    el.innerHTML = wagers.map(w => {
-      const status = w.won === true ? '🏆 Ganaste' : w.won === false ? '😔 Perdiste' : '⏳ En curso';
-      const statusClass = w.won === true ? 'accent' : w.won === false ? 'danger' : '';
+    el.innerHTML = jugadas.map(j => {
+      const estado = j.won === true ? '🏆 Ganaste' : j.won === false ? '😔 Perdiste' : '⏳ En curso';
+      const claseEstado = j.won === true ? 'accent' : j.won === false ? 'danger' : '';
       return `
         <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
           <div>
-            <p style="font-weight:500; margin-bottom:4px;">${w.bet_title}</p>
-            <p style="font-size:12px; color:var(--c-muted);">Aposté: <strong>${w.option}</strong> · ${w.amount} pts · ${new Date(w.timestamp).toLocaleDateString('es-MX')}</p>
+            <p style="font-weight:500; margin-bottom:4px;">${j.bet_title}</p>
+            <p style="font-size:12px; color:var(--c-muted);">Aposté: <strong>${j.option}</strong> · ${j.amount} pts · ${new Date(j.timestamp).toLocaleDateString('es-MX')}</p>
           </div>
-          <span class="badge ${statusClass}">${status}</span>
+          <span class="badge ${claseEstado}">${estado}</span>
         </div>`;
     }).join('');
   } catch(e) {}
 }
 
-// ─── Leaderboard ──────────────────────────────────────────────────────────────
-async function loadLeaderboard() {
+// ─── Tabla de posiciones ──────────────────────────────────────────────────────
+async function cargarTablaPosiciones() {
   try {
-    const top = await api('/api/leaderboard');
+    const top = await llamarAPI('/api/leaderboard');
     const el = document.getElementById('leaderboard-list');
-    const medals = ['🥇','🥈','🥉','4️⃣','5️⃣'];
+    const medallas = ['🥇','🥈','🥉','4️⃣','5️⃣'];
     el.innerHTML = top.map((u, i) => `
       <div class="lb-row">
-        <span class="lb-rank ${i===0?'gold':''}">${medals[i]}</span>
+        <span class="lb-rank ${i===0?'gold':''}">${medallas[i]}</span>
         <span class="lb-name">@${u.username}</span>
-        <span class="lb-points">${formatPts(u.points)}</span>
+        <span class="lb-points">${formatearPuntos(u.points)}</span>
       </div>`).join('') || '<div class="empty"><p>Sin datos aún</p></div>';
   } catch(e) {}
 }
 
-// ─── Rewards ──────────────────────────────────────────────────────────────────
-async function watchAd() {
-  const box = document.querySelector('.ad-box');
-  box.style.opacity = '.5';
-  box.style.pointerEvents = 'none';
-  // Simulated ad
-  showToast('📺 Viendo anuncio...', 'info');
+// ─── Recompensas ──────────────────────────────────────────────────────────────
+async function verAnuncio() {
+  const caja = document.querySelector('.ad-box');
+  caja.style.opacity = '.5';
+  caja.style.pointerEvents = 'none';
+  mostrarNotificacion('📺 Viendo anuncio...', 'info');
   await new Promise(r => setTimeout(r, 2000));
   try {
-    const data = await api('/api/ad-reward', 'POST', {});
-    showToast(`💰 ¡Ganaste ${data.reward} CuckostaPoints!`, 'win');
-    user.points = data.new_points;
-    localStorage.setItem('tibiomx_user', JSON.stringify(user));
-    updateSidebar();
-  } catch(e) { showToast(e.message || 'Error', 'lose'); }
-  box.style.opacity = '1';
-  box.style.pointerEvents = 'auto';
+    const datos = await llamarAPI('/api/ad-reward', 'POST', {});
+    mostrarNotificacion(`💰 ¡Ganaste ${datos.reward} CuckostaPoints!`, 'win');
+    usuario.points = datos.new_points;
+    localStorage.setItem('tibiomx_user', JSON.stringify(usuario));
+    actualizarBarraLateral();
+  } catch(e) { mostrarNotificacion(e.message || 'Error', 'lose'); }
+  caja.style.opacity = '1';
+  caja.style.pointerEvents = 'auto';
 }
 
-// ─── Live Poll ────────────────────────────────────────────────────────────────
-function startLivePoll() {
-  if (livePollInterval) clearInterval(livePollInterval);
-  livePollInterval = setInterval(async () => {
+// ─── Actualización en vivo ────────────────────────────────────────────────────
+function iniciarActualizacionEnVivo() {
+  if (intervaloActualizacionEnVivo) clearInterval(intervaloActualizacionEnVivo);
+  intervaloActualizacionEnVivo = setInterval(async () => {
     if (document.hidden) return;
     try {
-      const fresh = await api('/api/bets');
-      // Check for new winners
-      fresh.forEach(nb => {
-        const old = allBets.find(b => b.id === nb.id);
-        if (old && old.status === 'active' && nb.status === 'resolved') {
-          // User was betting?
-          showToast(`🎯 Apuesta "${nb.title}" fue resuelta`, 'info');
+      const apuestasNuevas = await llamarAPI('/api/bets');
+      // Verificar nuevos resultados
+      apuestasNuevas.forEach(nueva => {
+        const anterior = todasLasApuestas.find(b => b.id === nueva.id);
+        if (anterior && anterior.status === 'active' && nueva.status === 'resolved') {
+          mostrarNotificacion(`🎯 Apuesta "${nueva.title}" fue resuelta`, 'info');
         }
       });
-      allBets = fresh;
-      if (document.getElementById('section-bets').classList.contains('active')) renderBetsList(allBets);
-      renderHomeLiveBets();
+      todasLasApuestas = apuestasNuevas;
+      if (document.getElementById('section-bets').classList.contains('active')) renderizarListaApuestas(todasLasApuestas);
+      renderizarApuestasEnVivoInicio();
     } catch(e) {}
   }, 15000);
 }
 
-// ─── Modals ───────────────────────────────────────────────────────────────────
-function closeModal(id) {
+// ─── Modales ──────────────────────────────────────────────────────────────────
+function cerrarModal(id) {
   document.getElementById(id).classList.remove('open');
 }
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
 });
 
-// ─── Toast ────────────────────────────────────────────────────────────────────
-function showToast(msg, type='info') {
-  const container = document.getElementById('toast-container');
-  const t = document.createElement('div');
-  t.className = `toast ${type}`;
-  t.textContent = msg;
-  container.appendChild(t);
-  setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(20px)'; t.style.transition='all .3s'; setTimeout(() => t.remove(), 300); }, 3500);
+// ─── Notificaciones (Toast) ───────────────────────────────────────────────────
+function mostrarNotificacion(mensaje, tipo='info') {
+  const contenedor = document.getElementById('toast-container');
+  const notif = document.createElement('div');
+  notif.className = `toast ${tipo}`;
+  notif.textContent = mensaje;
+  contenedor.appendChild(notif);
+  setTimeout(() => {
+    notif.style.opacity='0';
+    notif.style.transform='translateX(20px)';
+    notif.style.transition='all .3s';
+    setTimeout(() => notif.remove(), 300);
+  }, 3500);
 }
 
-// ─── API helper ───────────────────────────────────────────────────────────────
-async function api(path, method='GET', body=null) {
-  const opts = {
-    method,
+// ─── Ayudante de API ──────────────────────────────────────────────────────────
+async function llamarAPI(ruta, metodo='GET', cuerpo=null) {
+  const opciones = {
+    method: metodo,
     headers: {'Content-Type':'application/json', 'Authorization': `Bearer ${token}`}
   };
-  if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(`${API}${path}`, opts);
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Error');
-  return data;
+  if (cuerpo) opciones.body = JSON.stringify(cuerpo);
+  const res = await fetch(`${API}${ruta}`, opciones);
+  const datos = await res.json();
+  if (!res.ok) throw new Error(datos.error || 'Error');
+  return datos;
 }
 
-function formatPts(n) {
+function formatearPuntos(n) {
   return new Intl.NumberFormat('es-MX').format(n) + ' pts';
 }
 </script>
