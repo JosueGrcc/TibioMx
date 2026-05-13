@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+{% block title %}Panel Admin — TibioMx{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>⚙️ Panel de Administración</h2>
+  <p>Control total de TibioMx</p>
+</div>
+
+<!-- ── Tabs de navegación ── -->
+<div class="admin-tabs">
+  <button class="admin-tab active" onclick="showTab('usuarios')">👤 Usuarios ({{ usuarios | length }})</button>
+  <button class="admin-tab" onclick="showTab('apuestas')">🎯 Apuestas ({{ apuestas_all | length }})</button>
+  <button class="admin-tab" onclick="showTab('videos')" id="tab-videos">📺 Anuncios ({{ videos | length }})</button>
+</div>
+
+<!-- ══════════════════ TAB USUARIOS ══════════════════ -->
+<div class="admin-panel-section" id="tab-usuarios">
+  <div class="admin-section-header">
+    <h3>Gestión de usuarios</h3>
+  </div>
+
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Usuario</th>
+          <th>Correo</th>
+          <th>Puntos</th>
+          <th>Admin</th>
+          <th>Registro</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in usuarios %}
+        <tr {% if u.is_admin %}class="admin-row"{% endif %}>
+          <td>
+            <span class="user-avatar-sm">{{ u.username[:2].upper() }}</span>
+            @{{ u.username }}
+            {% if u.is_admin %}<span class="admin-tag">admin</span>{% endif %}
+          </td>
+          <td class="muted-cell">{{ u.email }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('admin_actualizar_puntos', id_u=u._id) }}" class="inline-pts-form">
+              <input type="number" name="points" value="{{ u.points }}" class="pts-input" min="0">
+              <button type="submit" class="btn sm">✓</button>
+            </form>
+          </td>
+          <td>
+            <form method="POST" action="{{ url_for('admin_toggle_admin', id_u=u._id) }}">
+              <button type="submit" class="btn sm {% if u.is_admin %}btn-active{% endif %}">
+                {% if u.is_admin %}⭐ Sí{% else %}— No{% endif %}
+              </button>
+            </form>
+          </td>
+          <td class="muted-cell">{{ u.created_at.strftime('%d/%m/%y') if u.created_at else '—' }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('admin_borrar_usuario', id_u=u._id) }}"
+                  onsubmit="return confirm('¿Eliminar a @{{ u.username }}? Esta acción no se puede deshacer.')">
+              <button type="submit" class="btn sm danger">🗑️ Borrar</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════ TAB APUESTAS ══════════════════ -->
+<div class="admin-panel-section hidden" id="tab-apuestas">
+  <div class="admin-section-header">
+    <h3>Gestión de apuestas</h3>
+  </div>
+
+  {% if apuestas_all %}
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Título</th>
+          <th>Creador</th>
+          <th>Estado</th>
+          <th>Pool</th>
+          <th>Termina</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ap in apuestas_all %}
+        <tr>
+          <td>{{ ap.title[:50] }}{% if ap.title|length > 50 %}…{% endif %}</td>
+          <td class="muted-cell">@{{ ap.creator_username }}</td>
+          <td>
+            {% if ap.status == 'active' %}
+              <span class="badge accent">Activa</span>
+            {% else %}
+              <span class="badge">Resuelta</span>
+            {% endif %}
+          </td>
+          <td class="muted-cell">{{ ap.total_pool }} pts</td>
+          <td class="muted-cell">{{ ap.ends_at.strftime('%d/%m %H:%M') if ap.ends_at else '—' }}</td>
+          <td style="display:flex; gap:6px; flex-wrap:wrap;">
+            {% if ap.status == 'active' %}
+            <form method="POST" action="{{ url_for('admin_resolver_apuesta', id_apuesta=ap._id) }}" style="display:flex; gap:4px;">
+              <select name="winning_option" required style="font-size:12px; padding:5px 8px;">
+                <option value="" disabled selected>Ganó...</option>
+                {% for opt in ap.options %}
+                  <option value="{{ opt }}">{{ opt }}</option>
+                {% endfor %}
+              </select>
+              <button type="submit" class="btn sm">✅</button>
+            </form>
+            {% endif %}
+            <form method="POST" action="{{ url_for('admin_borrar_apuesta', id_apuesta=ap._id) }}"
+                  onsubmit="return confirm('¿Eliminar esta apuesta y todas sus jugadas?')">
+              <button type="submit" class="btn sm danger">🗑️</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <div class="empty"><div class="empty-icon">🎯</div><p>Sin apuestas registradas.</p></div>
+  {% endif %}
+</div>
+
+<!-- ══════════════════ TAB VIDEOS ══════════════════ -->
+<div class="admin-panel-section hidden" id="tab-videos">
+  <!-- Agregar video -->
+  <div class="inline-form-wrap" style="margin-bottom:24px;">
+    <h4>+ Agregar video de anuncio</h4>
+    <form method="POST" action="{{ url_for('admin_agregar_video') }}">
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Título del anuncio</label>
+          <input type="text" name="title" placeholder="Ej: Promo UTNG" required>
+        </div>
+        <div class="form-group">
+          <label>URL del video (.mp4 o enlace directo)</label>
+          <input type="url" name="url" placeholder="https://ejemplo.com/video.mp4" required>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Recompensa mínima (pts)</label>
+          <input type="number" name="reward_min" value="10" min="1" max="10000">
+        </div>
+        <div class="form-group">
+          <label>Recompensa máxima (pts)</label>
+          <input type="number" name="reward_max" value="50" min="1" max="10000">
+        </div>
+      </div>
+      <button type="submit" class="btn primary">Agregar video ✅</button>
+    </form>
+  </div>
+
+  <!-- Lista de videos -->
+  <h3 style="font-family:'Syne',sans-serif; font-size:16px; font-weight:600; margin-bottom:16px;">
+    Videos registrados ({{ videos | length }})
+  </h3>
+
+  {% if videos %}
+    {% for v in videos %}
+    <div class="video-admin-card {% if not v.active %}video-inactive{% endif %}">
+      <div class="video-admin-info">
+        <div class="video-admin-title">
+          {{ v.title }}
+          {% if v.active %}
+            <span class="badge accent" style="margin-left:8px;">Activo</span>
+          {% else %}
+            <span class="badge" style="margin-left:8px;">Inactivo</span>
+          {% endif %}
+        </div>
+        <div class="video-admin-url">🔗 <a href="{{ v.url }}" target="_blank" rel="noopener">{{ v.url[:60] }}{% if v.url|length > 60 %}…{% endif %}</a></div>
+        <div style="font-size:12px; color:var(--c-muted); margin-top:4px;">
+          Recompensa: {{ v.reward_min }}–{{ v.reward_max }} pts
+        </div>
+        <!-- Preview pequeño -->
+        <video src="{{ v.url }}" width="200" height="110" style="margin-top:10px; border-radius:8px; border:1px solid var(--c-border);" controls preload="none"></video>
+      </div>
+      <div class="video-admin-actions">
+        <form method="POST" action="{{ url_for('admin_toggle_video', video_id=v.id) }}">
+          <button type="submit" class="btn sm {% if v.active %}{% else %}btn-active{% endif %}">
+            {% if v.active %}⏸ Desactivar{% else %}▶ Activar{% endif %}
+          </button>
+        </form>
+        <form method="POST" action="{{ url_for('admin_borrar_video', video_id=v.id) }}"
+              onsubmit="return confirm('¿Eliminar este video?')">
+          <button type="submit" class="btn sm danger">🗑️ Borrar</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty"><div class="empty-icon">📺</div><p>No hay videos aún. Agrega el primero arriba.</p></div>
+  {% endif %}
+</div>
+
+<script>
+function showTab(name) {
+  document.querySelectorAll('.admin-panel-section').forEach(s => s.classList.add('hidden'));
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.remove('hidden');
+  event.currentTarget.classList.add('active');
+}
+
+// Si la URL tiene #videos, abrir esa pestaña
+if (window.location.hash === '#videos') {
+  showTab('videos');
+  document.querySelectorAll('.admin-tab')[2].classList.add('active');
+  document.querySelectorAll('.admin-tab')[0].classList.remove('active');
+}
+</script>
+{% endblock %}

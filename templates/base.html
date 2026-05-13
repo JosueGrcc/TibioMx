@@ -35,11 +35,16 @@
       <a class="nav-item {% if active == 'rewards' %}active{% endif %}" href="{{ url_for('recompensas') }}">
         <span class="nav-icon">💰</span> Ganar puntos
       </a>
+      {% if usuario.is_admin %}
+      <a class="nav-item nav-admin {% if active == 'admin' %}active{% endif %}" href="{{ url_for('admin_panel') }}">
+        <span class="nav-icon">⚙️</span> Admin
+      </a>
+      {% endif %}
     </nav>
     <div class="sidebar-user">
       <div class="avatar">{{ usuario.username[:2].upper() }}</div>
       <div class="sidebar-user-info">
-        <p>@{{ usuario.username }}</p>
+        <p>@{{ usuario.username }}{% if usuario.is_admin %} <span class="admin-tag">admin</span>{% endif %}</p>
         <span>{{ usuario.points | formato_puntos }}</span>
       </div>
     </div>
@@ -47,6 +52,15 @@
 
   <!-- Main content -->
   <div id="main">
+
+    <!-- Reload button -->
+    <button class="reload-btn" onclick="location.reload()" title="Recargar página">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+        <path d="M3 3v5h5"/>
+      </svg>
+    </button>
+
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         <ul class="flash-list">
@@ -61,5 +75,26 @@
   </div>
 
 </div>
+
+<script>
+  // Hamburger menu para móvil
+  document.addEventListener('DOMContentLoaded', function () {
+    const ham = document.querySelector('.hamburger');
+    const sidebar = document.getElementById('sidebar');
+    if (ham && sidebar) {
+      ham.addEventListener('click', function () {
+        sidebar.classList.toggle('open');
+      });
+    }
+
+    // Animación del botón reload
+    const reloadBtn = document.querySelector('.reload-btn');
+    if (reloadBtn) {
+      reloadBtn.addEventListener('click', function () {
+        this.classList.add('spinning');
+      });
+    }
+  });
+</script>
 </body>
 </html>

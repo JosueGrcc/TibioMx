@@ -19,21 +19,64 @@
   <span class="badge accent">+100/día</span>
 </div>
 
-<!-- Ver anuncio -->
-<div class="ad-box">
-  <div class="ad-icon">📺</div>
-  <p>Ver un <strong>anuncio</strong> y ganar entre 10–50 CuckostaPoints</p>
-  <small>Disponible cada hora</small>
-  <br><br>
-  <form method="POST" action="{{ url_for('ver_anuncio') }}">
-    <button type="submit" class="btn primary" style="margin:0 auto; display:inline-flex;">
-      Ver anuncio ahora
-    </button>
-  </form>
+<!-- Anuncios en video -->
+<div class="ad-section">
+  <h3 class="ad-section-title">📺 Ver anuncios</h3>
+  <p class="ad-section-sub">Ve un anuncio completo y gana CuckostaPoints. Disponible cada hora.</p>
+
+  {% if videos %}
+    <div class="video-ads-grid">
+      {% for video in videos %}
+      <div class="video-ad-card" id="ad-{{ video.id }}">
+        <div class="video-ad-header">
+          <span class="video-ad-title">{{ video.title }}</span>
+          <span class="badge gold">+{{ video.reward_min }}–{{ video.reward_max }} pts</span>
+        </div>
+
+        <!-- Video player -->
+        <div class="video-wrapper">
+          <video
+            id="player-{{ video.id }}"
+            class="ad-video"
+            preload="metadata"
+            controlsList="nodownload nofullscreen noremoteplayback"
+            oncontextmenu="return false"
+          >
+            <source src="{{ video.url }}" type="video/mp4">
+            Tu navegador no soporta video HTML5.
+          </video>
+          <div class="video-overlay" id="overlay-{{ video.id }}">
+            <button class="play-btn" onclick="startAd('{{ video.id }}')">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+              Ver anuncio
+            </button>
+          </div>
+          <!-- Barra de progreso -->
+          <div class="video-progress-bar" id="progress-{{ video.id }}"></div>
+        </div>
+
+        <!-- Botón de canje (se habilita al terminar el video) -->
+        <form method="POST" action="{{ url_for('ver_anuncio') }}" id="form-{{ video.id }}">
+          <input type="hidden" name="video_id" value="{{ video.id }}">
+          <button type="submit" class="btn primary" id="claim-{{ video.id }}" disabled style="width:100%; justify-content:center; margin-top:12px; opacity:.4; cursor:not-allowed;">
+            🔒 Ve el anuncio completo para reclamar
+          </button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty" style="padding:40px 20px;">
+      <div class="empty-icon">📺</div>
+      <p>No hay anuncios disponibles en este momento.</p>
+    </div>
+  {% endif %}
 </div>
 
 <!-- Ganar apuestas -->
-<div class="card" style="display:flex; align-items:center; gap:16px;">
+<div class="card" style="display:flex; align-items:center; gap:16px; margin-top:8px;">
   <div style="font-size:32px;">🎯</div>
   <div>
     <p style="font-weight:600; margin-bottom:4px;">Ganar apuestas</p>
@@ -45,4 +88,32 @@
     </p>
   </div>
 </div>
+
+<script>
+function startAd(videoId) {
+  const video   = document.getElementById('player-' + videoId);
+  const overlay = document.getElementById('overlay-' + videoId);
+  const progress= document.getElementById('progress-' + videoId);
+  const claim   = document.getElementById('claim-' + videoId);
+
+  overlay.style.display = 'none';
+  video.controls = true;
+  video.play();
+
+  video.addEventListener('timeupdate', function () {
+    if (video.duration) {
+      const pct = (video.currentTime / video.duration) * 100;
+      progress.style.width = pct + '%';
+    }
+  });
+
+  video.addEventListener('ended', function () {
+    claim.disabled = false;
+    claim.style.opacity = '1';
+    claim.style.cursor = 'pointer';
+    claim.textContent = '🎁 ¡Reclamar CuckostaPoints!';
+    progress.style.background = 'var(--c-accent)';
+  });
+}
+</script>
 {% endblock %}

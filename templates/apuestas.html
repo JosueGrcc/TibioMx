@@ -13,7 +13,17 @@
 
 <!-- ── Crear nueva apuesta ── -->
 <div id="nueva" class="inline-form-wrap" style="margin-bottom:24px;">
-  <h4>+ Nueva apuesta</h4>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+    <h4 style="margin-bottom:0;">+ Nueva apuesta</h4>
+    <span class="badge gold" title="Costo de crear una apuesta">🪙 Costo: {{ bet_cost }} pts</span>
+  </div>
+
+  {% if usuario.points < bet_cost %}
+    <div class="alert-banner">
+      ⚠️ Necesitas al menos <strong>{{ bet_cost }} CuckostaPoints</strong> para crear una apuesta.
+      <a href="{{ url_for('recompensas') }}" style="color:var(--c-accent); margin-left:8px;">Ganar más →</a>
+    </div>
+  {% else %}
   <form method="POST" action="{{ url_for('crear_apuesta_ruta') }}">
     <div class="form-group">
       <label>¿Qué va a pasar?</label>
@@ -55,8 +65,9 @@
         </select>
       </div>
     </div>
-    <button type="submit" class="btn primary">Crear apuesta 🎲</button>
+    <button type="submit" class="btn primary">Crear apuesta 🎲 <span style="opacity:.7;font-size:11px;">(-{{ bet_cost }} pts)</span></button>
   </form>
+  {% endif %}
 </div>
 
 <hr class="divider">
@@ -73,8 +84,11 @@
 {% if apuestas %}
   {% for apuesta in apuestas %}
     {% set es_creador = (apuesta.creator_id == usuario._id|string) %}
-    <div class="bet-card">
-      <div class="bet-title">{{ apuesta.title }}</div>
+    <div class="bet-card {% if es_creador %}bet-own{% endif %}">
+      <div class="bet-title">
+        {{ apuesta.title }}
+        {% if es_creador %}<span class="badge accent" style="font-size:10px; vertical-align:middle; margin-left:8px;">Tu apuesta</span>{% endif %}
+      </div>
       {% if apuesta.description %}
         <div class="bet-desc">{{ apuesta.description }}</div>
       {% endif %}
@@ -95,22 +109,28 @@
         {% endfor %}
       </div>
 
-      <!-- Formulario de apuesta -->
-      <form method="POST" action="{{ url_for('apostar', id_apuesta=apuesta._id) }}">
-        <div class="wager-form">
-          <select name="option" required>
-            <option value="" disabled selected>Elige opción...</option>
-            {% for opt in apuesta.options %}
-              <option value="{{ opt }}">{{ opt }}</option>
-            {% endfor %}
-          </select>
-          <input type="number" name="amount" placeholder="Pts" min="1" max="{{ usuario.points }}" required>
-          <button type="submit" class="btn primary sm">Apostar 🎲</button>
-        </div>
-      </form>
-
-      <!-- Resolver (solo creador) -->
+      <!-- Formulario de apuesta o bloqueo si es tuya -->
       {% if es_creador %}
+        <div class="own-bet-notice">
+          🚫 No puedes apostar en tu propia apuesta
+        </div>
+      {% else %}
+        <form method="POST" action="{{ url_for('apostar', id_apuesta=apuesta._id) }}">
+          <div class="wager-form">
+            <select name="option" required>
+              <option value="" disabled selected>Elige opción...</option>
+              {% for opt in apuesta.options %}
+                <option value="{{ opt }}">{{ opt }}</option>
+              {% endfor %}
+            </select>
+            <input type="number" name="amount" placeholder="Pts" min="1" max="{{ usuario.points }}" required>
+            <button type="submit" class="btn primary sm">Apostar 🎲</button>
+          </div>
+        </form>
+      {% endif %}
+
+      <!-- Resolver (solo creador o admin) -->
+      {% if es_creador or usuario.is_admin %}
         <form method="POST" action="{{ url_for('resolver', id_apuesta=apuesta._id) }}" style="margin-top:10px;">
           <div class="resolve-form">
             <select name="winning_option" required>
@@ -120,6 +140,13 @@
               {% endfor %}
             </select>
             <button type="submit" class="btn sm">✅ Resolver</button>
+            {% if usuario.is_admin %}
+            <form method="POST" action="{{ url_for('borrar_apuesta_ruta', id_apuesta=apuesta._id) }}" style="display:inline;"
+                  onsubmit="return confirm('¿Eliminar esta apuesta?')">
+              <input type="hidden" name="redirect" value="apuestas">
+              <button type="submit" class="btn sm danger">🗑️</button>
+            </form>
+            {% endif %}
           </div>
         </form>
       {% endif %}
