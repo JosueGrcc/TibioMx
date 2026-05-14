@@ -1,74 +1,151 @@
-# TibioMx 🎲 — Apuestas Universitarias
+# TibioMx 🎲
 
-Plataforma de apuestas cotidianas con CuckostaPoints para universidades.
-
-## Stack
-- **Backend**: Python 3.11 + Flask
-- **Base de datos**: MongoDB Atlas
-- **Frontend**: HTML/CSS/JS vanilla (un solo archivo)
-- **Auth**: JWT + bcrypt
+Plataforma de apuestas cotidianas universitarias con CuckostaPoints — la moneda virtual del campus.
 
 ---
 
-## Instalación rápida
+## ¿Qué es TibioMx?
+
+TibioMx permite a estudiantes crear y participar en apuestas del día a día universitario: si el profe llega tarde, si hay examen sorpresa, o cualquier evento cotidiano. Todo con puntos virtuales (CuckostaPoints), sin dinero real de por medio.
+
+---
+
+## Stack
+
+| Capa | Tecnología |
+|------|-----------|
+| Backend | Python · Flask · Flask-Session |
+| Base de datos | MongoDB Atlas (pymongo) |
+| Auth | bcrypt |
+| Frontend | Jinja2 · HTML/CSS vanilla |
+| Deploy | Gunicorn |
+
+---
+
+## Instalación
+
+### Requisitos
+
+- Python 3.10+
+- Cuenta en MongoDB Atlas (o URI de conexión propia)
+
+### Pasos
 
 ```bash
+# 1. Clonar el repositorio
+git clone https://github.com/tu-usuario/tibiomx.git
 cd tibiomx
+
+# 2. Crear entorno virtual
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# 3. Instalar dependencias
 pip install -r requirements.txt
+
+# 4. Configurar la URI de MongoDB en db.py
+# Edita la variable MONGO_URI con tu cadena de conexión
+
+# 5. Correr la app
 python app.py
 ```
 
-Abre http://localhost:5000
+La app corre en `http://localhost:5000` por defecto.
+
+### Para producción
+
+```bash
+gunicorn app:app --bind 0.0.0.0:8000
+```
+
+---
+
+## Estructura del proyecto
+
+```
+tibiomx/
+├── app.py            # Rutas y lógica de Flask
+├── db.py             # Modelos y operaciones con MongoDB
+├── requirements.txt
+├── style.css         # Estilos globales (dark theme)
+├── base.html         # Layout base con sidebar
+├── login.html
+├── register.html
+├── inicio.html       # Dashboard principal
+├── apuestas.html     # Crear y participar en apuestas
+├── grupos.html       # Grupos privados
+├── historial.html    # Historial de jugadas del usuario
+├── leaderboard.html  # Top 5 por puntos
+├── recompensas.html  # Bono diario y anuncios en video
+└── Admin.html        # Panel de administración
+```
 
 ---
 
 ## Funcionalidades
 
-| Feature | Descripción |
-|---|---|
-| 🔐 Auth | Registro/Login con correo institucional + JWT |
-| 🎲 Apuestas | Crea apuestas sobre cualquier cosa cotidiana |
-| 👥 Grupos | Grupos privados con código de invitación |
-| 🔴 En vivo | Feed en tiempo real de quién apuesta qué |
-| 🏆 Top 5 | Leaderboard con los que más puntos tienen |
-| 🌅 Bono diario | +100 puntos automáticos al iniciar sesión |
-| 📺 Ver anuncios | Gana 10–50 puntos viendo un anuncio (1/hora) |
-| 📧 Email | Notificación al correo cuando ganas/pierdes |
+### Usuarios
+- Registro e inicio de sesión con contraseña hasheada (bcrypt)
+- Bono diario de **+100 pts** al iniciar sesión (una vez cada 24 h)
+- Ver y ganar puntos viendo anuncios en video (una vez por hora)
 
-## Sistema de puntos
-- **Al registrarse**: 1,000 CuckostaPoints
-- **Bono diario**: +100 pts/día
-- **Ver anuncio**: +10 a 50 pts (máx 1/hora)
-- **Ganar apuesta**: participas del pool proporcional a lo que apostaste
+### Apuestas
+- Crear apuestas con 2–4 opciones y fecha de cierre
+- Costo de creación: **100 CuckostaPoints**
+- No puedes apostar en tus propias apuestas
+- El creador (o un admin) resuelve la apuesta eligiendo la opción ganadora
+- Pago proporcional: `pago = (tu apuesta / pool ganadores) × pool total`
+- Feed en vivo con las últimas jugadas de cada apuesta
 
-## Estructura de archivos
+### Grupos
+- Crear grupos privados con código de invitación de 6 caracteres
+- Unirse con código
+- Las apuestas pueden ser públicas o restringidas a un grupo
 
+### Leaderboard
+- Top 5 usuarios con más CuckostaPoints
+
+### Panel de administración (`/admin`)
+- Gestión de usuarios: editar puntos, dar/quitar rol admin, eliminar
+- Gestión de apuestas: resolver o eliminar cualquier apuesta
+- Gestión de videos de anuncios: agregar, activar/desactivar, eliminar
+
+---
+
+## Cuenta admin por defecto
+
+| Campo | Valor |
+|-------|-------|
+| Usuario | `admin` |
+| Email | `admin@tibiomx.com` |
+| Contraseña | `Admin1234!` |
+
+> ⚠️ Cambia la contraseña antes de desplegar en producción. Edita `ADMIN_PASSWORD` en `db.py`.
+
+---
+
+## Variables a configurar en `db.py`
+
+```python
+MONGO_URI = 'tu_uri_de_mongodb_atlas'
+ADMIN_PASSWORD = 'nueva_contraseña_segura'
+BET_CREATION_COST = 100  # Costo en pts para crear una apuesta
 ```
-tibiomx/
-├── app.py           # Flask routes + JWT auth
-├── db.py            # MongoDB: users, bets, wagers, groups
-├── index.html       # Frontend completo (single-page app)
-└── requirements.txt
-```
 
-## Variables de entorno (producción)
+---
 
-```bash
-SECRET_KEY=tu_secreto_super_seguro
-# Configura SMTP en app.py → _send_result_email() para emails reales
-```
+## Colecciones en MongoDB
 
-## Flujo de una apuesta 
+| Colección | Descripción |
+|-----------|-------------|
+| `users` | Usuarios registrados |
+| `bets` | Apuestas creadas |
+| `wagers` | Jugadas individuales |
+| `groups` | Grupos privados |
+| `site_config` | Configuración global (videos de anuncios) |
 
-1. Un usuario crea una apuesta: *"¿El profe de BD llega tarde hoy?"*
-2. Otros usuarios ven la apuesta y eligen opción + cantidad
-3. Los puntos se descuentan inmediatamente
-4. Al final del día, el **creador** valida qué pasó (botón "Resolver")
-5. Los ganadores reciben su parte del pool proporcional a lo apostado
-6. Se envía notificación por correo y alerta en pantalla
+---
 
-## Cómo funciona el pago
-```
-Pool total = suma de todas las apuestas
-Pago ganador = (mi apuesta / pool_ganadores) × pool_total
-```
+## Licencia
+
+Proyecto universitario — uso educativo y personal.

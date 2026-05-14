@@ -18,21 +18,12 @@ ADMIN_PASSWORD = 'Admin1234!'   # cámbialo en producción
 
 BET_CREATION_COST = 100          # CuckostaPoints para crear una apuesta
 
-
-def _crear_contexto_ssl():
-    ctx = ssl.create_default_context(cafile=certifi.where())
-    ctx.minimum_version = ssl.TLSVersion.TLSv1_2
-    ctx.maximum_version = ssl.TLSVersion.TLSv1_2
-    return ctx
-
-
 def obtener_base_datos():
     global _cliente, _base_datos
     if _base_datos is None:
         intentos = [
             lambda: MongoClient(
                 MONGO_URI,
-                ssl_context=_crear_contexto_ssl(),
                 serverSelectionTimeoutMS=10000,
                 connectTimeoutMS=10000,
                 socketTimeoutMS=20000,
