@@ -161,11 +161,19 @@ def crear_apuesta_ruta():
     fecha_fin_str = request.form.get('ends_at', '')
     id_grupo = request.form.get('group_id') or None
 
+    # Offset de zona horaria enviado por el browser (minutos para llegar a UTC)
+    try:
+        tz_offset_min = int(request.form.get('tz_offset', 0))
+    except (ValueError, TypeError):
+        tz_offset_min = 0
+
     if not titulo or len(opciones) < 2 or not fecha_fin_str:
         flash('Completa todos los campos y al menos 2 opciones', 'error')
         return redirect(url_for('apuestas'))
     try:
-        fecha_fin = datetime.datetime.fromisoformat(fecha_fin_str)
+        fecha_fin_local = datetime.datetime.fromisoformat(fecha_fin_str)
+        # Convertir hora local del usuario a UTC sumando el offset
+        fecha_fin = fecha_fin_local + datetime.timedelta(minutes=tz_offset_min)
     except Exception:
         flash('Fecha inválida', 'error')
         return redirect(url_for('apuestas'))
