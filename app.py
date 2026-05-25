@@ -21,7 +21,7 @@ import datetime
 import os
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'tibiomx_secret_2024'
+app.config['SECRET_KEY'] = 'tibiomx_secret_6767'
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_FILE_DIR'] = '/tmp/flask_sessions'
 app.config['SESSION_PERMANENT'] = False
@@ -29,7 +29,7 @@ Session(app)
 
 os.makedirs('/tmp/flask_sessions', exist_ok=True)
 
-# ─── Helpers ──────────────────────────────────────────────────────────────────
+# Helpers
 
 def usuario_actual():
     uid = session.get('user_id')
@@ -52,7 +52,7 @@ def requiere_admin():
     return None
 
 
-# ─── Auth ─────────────────────────────────────────────────────────────────────
+# Auth
 
 @app.route('/')
 def index():
@@ -112,7 +112,7 @@ def logout():
     return redirect(url_for('login'))
 
 
-# ─── Inicio ───────────────────────────────────────────────────────────────────
+# Inicio
 
 @app.route('/inicio')
 def inicio():
@@ -124,7 +124,7 @@ def inicio():
     return render_template('inicio.html', usuario=u, apuestas=apuestas, en_vivo=en_vivo, active='home')
 
 
-# ─── Apuestas ─────────────────────────────────────────────────────────────────
+# Apuestas
 
 @app.route('/apuestas')
 def apuestas():

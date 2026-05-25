@@ -444,6 +444,7 @@ def obtener_todos_videos_anuncios():
     cfg = obtener_config_anuncios()
     if not cfg:
         return []
+    print(len(list(cfg.get('videos', []))))
     return cfg.get('videos', [])
 
 
