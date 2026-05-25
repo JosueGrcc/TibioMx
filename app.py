@@ -1,9 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_session import Session
 from db import (
     crear_usuario, obtener_usuario_por_correo, obtener_usuario_por_nombre, obtener_usuario_por_id,
     crear_apuesta, obtener_apuestas_activas, obtener_apuesta_por_id, realizar_jugada, resolver_apuesta,
-    obtener_tabla_de_posiciones, crear_grupo, obtener_grupos_de_usuario, obtener_grupo_por_id,
+    obtener_tabla_de_posiciones, crear_grupo, obtener_grupos_de_usuario,
     agregar_miembro_a_grupo, verificar_bono_diario, recompensa_por_anuncio,
     obtener_jugadas_de_usuario, actualizar_puntos_usuario, obtener_grupo_por_codigo_invitacion,
     borrar_apuesta, es_admin,

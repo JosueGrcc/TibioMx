@@ -4,7 +4,6 @@ import bcrypt
 import datetime
 import random
 import string
-import ssl
 from bson import ObjectId
 
 MONGO_URI = 'mongodb+srv://sixeven_db_user:andresjr1234@brazzino01.ba7bkul.mongodb.net/?appName=Brazzino01'
@@ -14,9 +13,9 @@ _base_datos = None
 
 ADMIN_USERNAME = 'admin'
 ADMIN_EMAIL    = 'admin@tibiomx.com'
-ADMIN_PASSWORD = 'Admin1234!'   # cámbialo en producción
+ADMIN_PASSWORD = 'Admin1234!'
 
-BET_CREATION_COST = 100          # CuckostaPoints para crear una apuesta
+BET_CREATION_COST = 100
 
 def obtener_base_datos():
     global _cliente, _base_datos
@@ -420,11 +419,6 @@ def agregar_miembro_a_grupo(id_grupo, id_usuario, nombre_usuario):
         {'$push': {'members': {'user_id': id_usuario, 'username': nombre_usuario}}}
     )
     return {'ok': True}
-
-
-def obtener_apuestas_de_grupo(id_grupo):
-    return list(Apuestas().find({'group_id': ObjectId(id_grupo)}).sort('created_at', DESCENDING))
-
 
 # ─── Tabla de posiciones ──────────────────────────────────────────────────────
 
